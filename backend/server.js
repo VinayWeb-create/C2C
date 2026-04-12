@@ -20,8 +20,25 @@ connectDB();
 const app = express();
 
 app.use(helmet());
+const allowedOrigins = [
+  (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, ''),
+  'https://c2-c-sable.vercel.app',
+  'https://c2-5ltonl5v1-vinay-avalas-projects.vercel.app'
+];
+
 app.use(cors({
-  origin: (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, ''),
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    
+    const isAllowed = allowedOrigins.includes(origin) || origin.endsWith('.vercel.app');
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 app.use(express.json({ limit: '10mb' }));
