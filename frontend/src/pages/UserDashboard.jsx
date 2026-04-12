@@ -13,10 +13,17 @@ import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const UserDashboard = () => {
-  const { user } = useAuth();
+  const { user, becomeProvider } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [activeDomain, setActiveDomain] = useState('Web Development');
+
+  const handleBecomeProvider = async () => {
+    const res = await becomeProvider();
+    if (res.success) {
+      navigate('/dashboard/provider');
+    }
+  };
 
   // Stats calculation based on user data
   const stats = {
@@ -74,7 +81,10 @@ const UserDashboard = () => {
             <AcademicCapIcon className="w-5 h-5" /> Continue Learning
           </button>
           {hasProfessionalBadge ? (
-            <button onClick={() => navigate('/provider-dashboard')} className="btn-secondary py-3 px-8 rounded-2xl flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 text-amber-600 border-amber-200">
+            <button 
+              onClick={handleBecomeProvider} 
+              className="btn-secondary py-3 px-8 rounded-2xl flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 text-amber-600 border-amber-200 hover:bg-amber-100 transition shadow-lg"
+            >
               <ShieldCheckIcon className="w-5 h-5" /> Switch to Provider
             </button>
           ) : (

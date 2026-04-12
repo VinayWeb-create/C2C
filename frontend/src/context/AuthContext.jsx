@@ -74,8 +74,24 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(updatedUser));
   };
 
+  const becomeProvider = async () => {
+    setLoading(true);
+    try {
+      const { data } = await api.put('/auth/become-provider');
+      updateUser(data.user);
+      toast.success(data.message);
+      return { success: true, user: data.user };
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Action failed';
+      toast.error(msg);
+      return { success: false, error: msg };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, initialLoad, register, login, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, initialLoad, register, login, logout, updateUser, becomeProvider }}>
       {children}
     </AuthContext.Provider>
   );

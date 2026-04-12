@@ -205,3 +205,26 @@ export const resetPassword = asyncHandler(async (req, res) => {
 
   res.json({ success: true, message: 'Password reset successfully. You can now login.' });
 });
+
+// @desc    Switch user role to provider (Requires merit badge)
+// @route   PUT /api/auth/become-provider
+// @access  Private
+export const becomeProvider = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  // Requirement: User must have at least one professional badge
+  if (!user.badges || user.badges.length === 0) {
+    res.status(403);
+    throw new Error('You must earn a Professional Merit Badge in the Learning Hub before becoming a provider.');
+  }
+
+  user.role = 'provider';
+  user.isApproved = false; // Reset approval status for admin to re-review their professional info
+  await user.save();
+
+  res.json({ 
+    success: true, 
+    message: 'Congratulations! You are now a Provider. Please complete your professional profile for Admin approval.',
+    user 
+  });
+});

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { EyeIcon, EyeSlashIcon, UserIcon, BriefcaseIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, EyeSlashIcon, UserIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
 
 const RegisterPage = () => {
@@ -24,124 +24,103 @@ const RegisterPage = () => {
     if (!validate()) return;
     const result = await register(form);
     if (result.success) {
-      navigate(result.user.role === 'provider' ? '/dashboard/provider' : '/');
+      navigate('/dashboard/user');
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 px-4 py-12">
       <div className="w-full max-w-md">
-        <div className="card p-8">
-          <div className="text-center mb-8">
-            <div className="w-12 h-12 bg-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <span className="text-white text-xl font-bold">SL</span>
+        <div className="card p-10 bg-white dark:bg-gray-900 rounded-[3rem] border border-gray-100 dark:border-gray-800 shadow-2xl relative overflow-hidden">
+          
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary-600/5 rounded-full -mr-16 -mt-16 blur-2xl" />
+
+          <div className="text-center mb-10 relative z-10">
+            <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-primary-600/20">
+              <UserIcon className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Create account</h1>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Join Smart Local Life today</p>
+            <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">Join C2C Academy</h1>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1 font-medium italic">Your journey to corporate excellence starts here.</p>
           </div>
 
-          {/* Role selector */}
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            {[
-              { value: 'user',     Icon: UserIcon,       label: 'I need services',  sub: 'Browse & book' },
-              { value: 'provider', Icon: BriefcaseIcon,  label: 'I provide services', sub: 'List & earn' },
-            ].map(({ value, Icon, label, sub }) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setForm({ ...form, role: value })}
-                className={`p-4 rounded-2xl border-2 text-left transition-all ${
-                  form.role === value
-                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-primary-300'
-                }`}
-              >
-                <Icon className={`w-5 h-5 mb-2 ${form.role === value ? 'text-primary-600' : 'text-gray-400'}`} />
-                <p className={`text-sm font-semibold ${form.role === value ? 'text-primary-700 dark:text-primary-300' : 'text-gray-700 dark:text-gray-200'}`}>{label}</p>
-                <p className="text-xs text-gray-400">{sub}</p>
-              </button>
-            ))}
+          {/* Merit Info Banner */}
+          <div className="mb-8 p-4 bg-primary-50 dark:bg-primary-900/20 rounded-2xl border border-primary-100 dark:border-primary-800/50 flex gap-4 items-start">
+             <ShieldCheckIcon className="w-6 h-6 text-primary-600 flex-shrink-0" />
+             <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-primary-700 dark:text-primary-300">Merit Policy</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-relaxed">
+                   All users join as <strong>Learners</strong>. Unlock <strong>Provider Status</strong> by earning professional badges.
+                </p>
+             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
             {/* Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Full name</label>
+              <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Full name</label>
               <input
                 type="text"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="John Doe"
-                className={`input-field ${errors.name ? 'border-red-400' : ''}`}
+                placeholder="Ex. Vinay Rok"
+                className={`input-field rounded-2xl py-4 bg-gray-50 dark:bg-gray-800 border-none focus:ring-2 focus:ring-primary-500 transition-all ${errors.name ? 'ring-2 ring-red-400' : ''}`}
               />
-              {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
+              {errors.name && <p className="text-xs text-red-500 mt-1 font-bold">{errors.name}</p>}
             </div>
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email address</label>
+              <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Email address</label>
               <input
                 type="email"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
-                placeholder="you@example.com"
-                className={`input-field ${errors.email ? 'border-red-400' : ''}`}
+                placeholder="name@company.com"
+                className={`input-field rounded-2xl py-4 bg-gray-50 dark:bg-gray-800 border-none focus:ring-2 focus:ring-primary-500 transition-all ${errors.email ? 'ring-2 ring-red-400' : ''}`}
               />
-              {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Phone <span className="text-gray-400 font-normal">(optional)</span></label>
-              <input
-                type="tel"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                placeholder="+91 9876543210"
-                className="input-field"
-              />
+              {errors.email && <p className="text-xs text-red-500 mt-1 font-bold">{errors.email}</p>}
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Password</label>
+              <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Password</label>
               <div className="relative">
                 <input
                   type={showPwd ? 'text' : 'password'}
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  placeholder="Min. 6 characters"
-                  className={`input-field pr-10 ${errors.password ? 'border-red-400' : ''}`}
+                  placeholder="Create a strong password"
+                  className={`input-field rounded-2xl py-4 pr-12 bg-gray-50 dark:bg-gray-800 border-none focus:ring-2 focus:ring-primary-500 transition-all ${errors.password ? 'ring-2 ring-red-400' : ''}`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPwd(!showPwd)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary-600 transition"
                 >
-                  {showPwd ? <EyeSlashIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+                  {showPwd ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
                 </button>
               </div>
-              {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
+              {errors.password && <p className="text-xs text-red-500 mt-1 font-bold">{errors.password}</p>}
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full justify-center py-3 text-base mt-2"
+              className="w-full bg-primary-600 hover:bg-primary-700 text-white font-black py-4 rounded-3xl text-xs uppercase tracking-widest shadow-xl shadow-primary-600/30 transition-all active:scale-95 disabled:opacity-50"
             >
               {loading ? (
-                <span className="flex items-center gap-2">
+                <span className="flex items-center justify-center gap-2">
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Creating account...
+                  Creating Secure Account...
                 </span>
-              ) : `Create ${form.role === 'provider' ? 'Provider' : ''} Account`}
+              ) : 'Start Your Journey'}
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
-            Already have an account?{' '}
-            <Link to="/login" className="text-primary-600 dark:text-primary-400 font-medium hover:underline">
-              Sign in
+          <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-10">
+            Already a member?{' '}
+            <Link to="/login" className="text-primary-600 dark:text-primary-400 font-black hover:underline">
+              Sign In →
             </Link>
           </p>
         </div>
