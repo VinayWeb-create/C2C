@@ -15,6 +15,7 @@ import bookingRoutes from './routes/bookingRoutes.js';
 import adminRoutes   from './routes/adminRoutes.js';
 import aiRoutes      from './routes/aiRoutes.js';
 import reviewRoutes   from './routes/reviewRoutes.js';
+import projectRoutes  from './routes/projectRoutes.js';
 
 connectDB();
 
@@ -58,6 +59,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/admin',    adminRoutes);
 app.use('/api/reviews',  reviewRoutes);
 app.use('/api/ai',       aiRoutes);
+app.use('/api/projects', projectRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });

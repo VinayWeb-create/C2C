@@ -1,171 +1,91 @@
 export const LEARNING_DATA = {
-  'Web Development': {
+  "Web Development": {
     roadmap: [
-      { id: 1, title: 'HTML & CSS Foundations', desc: 'Master semantic HTML and modern CSS layouts (Flexbox/Grid).' },
-      { id: 2, title: 'JavaScript Essentials', desc: 'Variables, loops, functions, and DOM manipulation.' },
-      { id: 3, title: 'Modern React', desc: 'Hooks, state management, and component architecture.' },
-      { id: 4, title: 'Backend & APIs', desc: 'Node.js, Express, and REST/GraphQL basics.' },
-      { id: 5, title: 'Deployment & CI/CD', desc: 'Hosting on Vercel/Netlify and GitHub Actions.' },
+      { title: "Internet Fundamentals", desc: "How browsers work, DNS, HTTP/HTTPS, and hosting." },
+      { title: "HTML/CSS Mastery", desc: "Semantic HTML, Flexbox, CSS Grid, and Responsive Design." },
+      { title: "JavaScript Ops", desc: "DOM manipulation, ES6+, Fetch API, and Async/Await." },
+      { title: "React Ecosystem", desc: "Hooks, Router, State Management (Redux/Zustand)." },
+      { title: "Deployment", desc: "Vercel, Netlify, and CI/CD pipelines." }
     ],
     youtube: [
-      { id: 1, title: 'React Crash Course 2024', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/0.jpg', channel: 'Traversy Media' },
-      { id: 2, title: 'Full Stack Web Dev Roadmap', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/0.jpg', channel: 'Programming with Mosh' },
-      { id: 3, title: 'Tailwind CSS in 100 Seconds', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/0.jpg', channel: 'Fireship' },
+      { id: 1, title: "HTML & CSS Full Course", channel: "SuperSimpleDev", thumbnail: "https://i.ytimg.com/vi/G3e-cpL7ofc/maxresdefault.jpg", url: "https://www.youtube.com/embed/G3e-cpL7ofc" },
+      { id: 2, title: "JavaScript for Beginners", channel: "Programming with Mosh", thumbnail: "https://i.ytimg.com/vi/W6NZ1pNrvz0/maxresdefault.jpg", url: "https://www.youtube.com/embed/W6NZ1pNrvz0" },
+      { id: 3, title: "React JS Crash Course 2024", channel: "Traversy Media", thumbnail: "https://i.ytimg.com/vi/w7ejDZ8SWv8/maxresdefault.jpg", url: "https://www.youtube.com/embed/w7ejDZ8SWv8" }
     ],
     notes: [
-      { id: 1, title: 'Clean Code Principles.pdf', size: '1.2 MB', type: 'PDF' },
-      { id: 2, title: 'React Hooks Cheatsheet.jpg', size: '800 KB', type: 'Image' },
-      { id: 3, title: 'Full Stack Deployment Guide', size: '15 KB', type: 'Link' },
-    ],
-    test: [
-      { id: 1, question: 'What does CSS stand for?', options: ['Creative Style Sheets', 'Cascading Style Sheets', 'Computer Style Sheets'], answer: 'Cascading Style Sheets' },
-      { id: 2, question: 'Which hook is used for side effects in React?', options: ['useState', 'useContext', 'useEffect'], answer: 'useEffect' },
+      { id: 1, title: "Frontend Cheat Sheet", size: "1.2 MB", type: "PDF" },
+      { id: 2, title: "React Best Practices", size: "850 KB", type: "DOCX" },
+      { id: 3, title: "Interview Questions (JS)", size: "2.1 MB", type: "PDF" }
     ],
     projects: [
-      { id: 1, title: 'Personal Portfolio Website', difficulty: 'Easy', desc: 'Build a responsive portfolio using HTML, CSS, and basic JS.' },
-      { id: 2, title: 'E-commerce Product Page', difficulty: 'Medium', desc: 'Create a dynamic product page with React and state management.' },
-      { id: 3, title: 'Real-time Chat App', difficulty: 'Hard', desc: 'Full-stack application using Socket.io and Node.js.' },
-    ]
-  },
-  'Graphic Design': {
-    roadmap: [
-      { id: 1, title: 'Principles of Design', desc: 'Balance, Contrast, Emphasis, and Rhythm.' },
-      { id: 2, title: 'Typography Basics', desc: 'Choosing fonts, pairing, and hierarchy.' },
-      { id: 3, title: 'Adobe Illustrator Proficency', desc: 'Vector art, logos, and illustration.' },
-      { id: 4, title: 'Photoshop for Retouching', desc: 'Photo manipulation and compositing.' },
-    ],
-    youtube: [
-      { id: 1, title: 'Design Theory 101', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/0.jpg', channel: 'The Futur' },
-      { id: 2, title: 'Illustrator Masterclass', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/0.jpg', channel: 'Yes I\'m a Designer' },
-    ],
-    notes: [
-      { id: 1, title: 'Color Theory Handbook', size: '2.5 MB', type: 'PDF' },
+      { id: 1, title: "E-Commerce Landing Page", desc: "Build a pixel-perfect, responsive e-commerce landing page using modern CSS.", difficulty: "Easy" },
+      { id: 2, title: "Task Management App", desc: "Create a full CRUD application with React and local storage.", difficulty: "Medium" }
     ],
     test: [
-      { id: 1, question: 'What is "Kerning" in typography?', options: ['Spacing between lines', 'Spacing between letters', 'Font weight'], answer: 'Spacing between letters' },
+      { 
+        id: 1, 
+        question: "Which of the following is NOT a JavaScript framework?", 
+        options: ["React", "Angular", "Python", "Vue"],
+        answer: "Python"
+      },
+      { 
+        id: 2, 
+        question: "What does CSS stand for?", 
+        options: ["Creative Style Sheets", "Cascading Style Sheets", "Computer Style Sheets", "Colorful Style Sheets"],
+        answer: "Cascading Style Sheets"
+      }
+    ]
+  },
+  "Graphic Design": {
+    roadmap: [
+      { title: "Design Theory", desc: "Color theory, typography, and composition." },
+      { title: "Adobe Photoshop", desc: "Photo editing, retouching, and manipulation." },
+      { title: "Adobe Illustrator", desc: "Vector graphics, logos, and icons." },
+      { title: "UI/UX Basics", desc: "Figma, wireframing, and prototyping." }
+    ],
+    youtube: [
+      { id: 1, title: "Photoshop for Beginners", channel: "Envato Tuts+", thumbnail: "https://i.ytimg.com/vi/IyR_uYsRdPs/maxresdefault.jpg", url: "https://www.youtube.com/embed/IyR_uYsRdPs" },
+      { id: 2, title: "Logo Design Principles", channel: "Flux Academy", thumbnail: "https://i.ytimg.com/vi/v_m1zYJb2fI/maxresdefault.jpg", url: "https://www.youtube.com/embed/v_m1zYJb2fI" }
+    ],
+    notes: [
+      { id: 1, title: "Color Palette Guide", size: "5.4 MB", type: "PDF" },
+      { id: 2, title: "Typography Masterclass", size: "3.2 MB", type: "PDF" }
     ],
     projects: [
-      { id: 1, title: 'Corporate Brand Identity', difficulty: 'Hard', desc: 'Design a full logo set, business cards, and brand guidelines.' },
-      { id: 2, title: 'Social Media Ad Campaign', difficulty: 'Medium', desc: 'Create a set of 5 banners for a digital marketing campaign.' },
-    ]
-  },
-  'Digital Marketing & SEO': {
-    roadmap: [
-        { id: 1, title: 'SEO Introduction', desc: 'On-page vs Off-page SEO.' },
-        { id: 2, title: 'Keyword Research', desc: 'Finding the right phrases for your niche.' },
-        { id: 3, title: 'Content Strategy', desc: 'Building authority through content.' }
-    ],
-    youtube: [
-        { id: 1, title: 'SEO for Beginners', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/0.jpg', channel: 'Ahrefs' }
-    ],
-    notes: [
-        { id: 1, title: 'SEO Checklist 2024', size: '500 KB', type: 'PDF' }
+      { id: 1, title: "Brand Identity Design", desc: "Create a complete branding kit for a mock juice startup.", difficulty: "Medium" }
     ],
     test: [
-        { id: 1, question: 'What does "CTR" stand for?', options: ['Click Through Rate', 'Cost To Run', 'Call To Review'], answer: 'Click Through Rate' }
+      { 
+        id: 1, 
+        question: "CMYK stands for Cyan, Magenta, Yellow, and...?", 
+        options: ["Kool", "Key (Black)", "Knowledge", "Kernel"],
+        answer: "Key (Black)"
+      }
+    ]
+  },
+  "Digital Marketing": {
+    roadmap: [
+      { title: "SEO Fundamentals", desc: "Keyword research, On-page and Off-page SEO." },
+      { title: "Social Media Marketing", desc: "Running ads on Facebook, Instagram, and LinkedIn." },
+      { title: "Content Strategy", desc: "Copywriting and email marketing campaigns." },
+      { title: "Analytics", desc: "Google Analytics 4 and conversion tracking." }
+    ],
+    youtube: [
+      { id: 1, title: "Google Ads Tutorial", channel: "Brian Dean", thumbnail: "https://i.ytimg.com/vi/1_MHLPps-8M/maxresdefault.jpg", url: "https://www.youtube.com/embed/1_MHLPps-8M" }
+    ],
+    notes: [
+      { id: 1, title: "SEO Checklist 2024", size: "450 KB", type: "PDF" }
     ],
     projects: [
-      { id: 1, title: 'SEO Audit for Local Business', difficulty: 'Medium', desc: 'Conduct a full SEO audit and provide a list of improvements.' },
-    ]
-  },
-  'UI/UX Design': {
-    roadmap: [
-      { id: 1, title: 'UX Research Fundamentals', desc: 'Understanding user personas and journey mapping.' },
-      { id: 2, title: 'Wireframing & Prototyping', desc: 'Using Figma/Adobe XD to build low-fidelity layouts.' },
-      { id: 3, title: 'Visual Design Systems', desc: 'Typography, color palettes, and component design.' },
-    ],
-    youtube: [
-      { id: 1, title: 'Figma for Beginners 2024', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/0.jpg', channel: 'Figma' }
-    ],
-    notes: [
-      { id: 1, title: 'UI Design Principles.pdf', size: '3.1 MB', type: 'PDF' }
+      { id: 1, title: "Ad Campaign Strategy", desc: "Plan a $500 monthly budget campaign for a local gym.", difficulty: "Easy" }
     ],
     test: [
-      { id: 1, question: 'What is the purpose of a wireframe?', options: ['Final visual design', 'Structural layout without styling', 'A clickable prototype'], answer: 'Structural layout without styling' }
-    ],
-    projects: [
-      { id: 1, title: 'FinTech App Redesign', difficulty: 'Hard', desc: 'Analyze an existing financial app and redesign its core workflow.' },
+      { 
+        id: 1, 
+        question: "What does SEO stand for?", 
+        options: ["Social Engine Operation", "Search Engine Optimization", "System Entry Order", "Search Electronic Output"],
+        answer: "Search Engine Optimization"
+      }
     ]
-  },
-  // Update other categories similarly...
-  'Video & Photo Editing': {
-    roadmap: [
-      { id: 1, title: 'Storytelling & Pacing', desc: 'Basic narrative structures in video.' },
-      { id: 2, title: 'Premiere Pro Essentials', desc: 'Cutting, transitions, and audio levels.' },
-      { id: 3, title: 'Color Grading', desc: 'Using Lumetri Color for cinematic looks.' },
-    ],
-    youtube: [
-      { id: 1, title: 'Video Editing Masterclass', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/0.jpg', channel: 'Cinecom.net' }
-    ],
-    notes: [
-      { id: 1, title: 'Editing Shortcuts Cheat Sheet', size: '1.2 MB', type: 'PDF' }
-    ],
-    test: [
-      { id: 1, question: 'What is a "Jump Cut"?', options: ['A smooth transition', 'An abrupt cut between two shots', 'A zoom effect'], answer: 'An abrupt cut between two shots' }
-    ]
-  },
-  'Data Science': {
-    roadmap: [
-      { id: 1, title: 'Python for Data Analysis', desc: 'Pandas, NumPy, and Matplotlib.' },
-      { id: 2, title: 'Statistical Foundations', desc: 'Probability, hypothesis testing, and regression.' },
-      { id: 3, title: 'Machine Learning Basics', desc: 'Scikit-Learn and common algorithms.' },
-    ],
-    youtube: [
-      { id: 1, title: 'Data Science Roadmap', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/0.jpg', channel: 'Ken Jee' }
-    ],
-    notes: [
-      { id: 1, title: 'Stats Formulas Handbook', size: '2.0 MB', type: 'PDF' }
-    ],
-    test: [
-      { id: 1, question: 'What is "Overfitting" in ML?', options: ['Model is too simple', 'Model performs well on training but poor on test data', 'Model is too fast'], answer: 'Model performs well on training but poor on test data' }
-    ]
-  },
-  'Content Writing': {
-    roadmap: [
-      { id: 1, title: 'Grammar & Style Basics', desc: 'Active vs Passive voice and SEO-friendly writing.' },
-      { id: 2, title: 'Copywriting Techniques', desc: 'Writing headlines and CTAs that convert.' },
-      { id: 3, title: 'Blogging & Articles', desc: 'Structuring long-form content for readability.' },
-    ],
-    youtube: [
-      { id: 1, title: 'Copywriting for Beginners', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/0.jpg', channel: 'Neil Patel' }
-    ],
-    notes: [
-      { id: 1, title: 'Power Words List.pdf', size: '200 KB', type: 'PDF' }
-    ],
-    test: [
-      { id: 1, question: 'What is "Passive Voice"?', options: ['The subject performs the action', 'The action is performed upon the subject', 'A tense used for future events'], answer: 'The action is performed upon the subject' }
-    ]
-  },
-  'PPT Presentations': {
-    roadmap: [
-      { id: 1, title: 'Visual Storytelling', desc: 'Using slides to support a narrative, not replace it.' },
-      { id: 2, title: 'Design Layouts & Alignment', desc: 'Rule of thirds and visual balance in slides.' },
-      { id: 3, title: 'Advanced PowerPoint/Slides', desc: 'Animations, transitions, and slide masters.' },
-    ],
-    youtube: [
-      { id: 1, title: 'Modern PPT Design', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/0.jpg', channel: 'Slidebean' }
-    ],
-    notes: [
-      { id: 1, title: 'Pitch Deck Template.pptx', size: '5.4 MB', type: 'PPTX' }
-    ],
-    test: [
-      { id: 1, question: 'What is the "10/20/30 Rule" by Guy Kawasaki?', options: ['10 colors, 20 slides, 30 minutes', '10 slides, 20 minutes, 30 point font', '10 minutes, 20 slides, 30 images'], answer: '10 slides, 20 minutes, 30 point font' }
-    ]
-  },
-  // Add more categories as needed...
-};
-
-// Fill missing categories with default placeholder data
-import { CATEGORIES } from '../utils/helpers';
-
-CATEGORIES.forEach(cat => {
-  if (!LEARNING_DATA[cat]) {
-    LEARNING_DATA[cat] = {
-      roadmap: [{ id: 1, title: 'Coming Soon', desc: 'We are preparing the roadmap for ' + cat }],
-      youtube: [],
-      notes: [],
-      test: [],
-      projects: []
-    };
   }
-});
+};

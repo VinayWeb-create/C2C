@@ -34,7 +34,20 @@ const userSchema = new mongoose.Schema({
     currentStatus: { type: String, default: '' }, // e.g., 'Student', 'Freelancer', 'Unstop Member'
     bio:           { type: String, default: '' },
     portfolioUrl:  { type: String, default: '' },
+    githubUrl:     { type: String, default: '' },
+    linkedInUrl:   { type: String, default: '' },
+    resumeUrl:     { type: String, default: '' },
   },
+  badges: [{
+    name: String,
+    issuedAt: { type: Date, default: Date.now },
+    role: String // The role they earned the badge for
+  }],
+  testResults: [{
+    testId: String,
+    score: Number,
+    completedAt: { type: Date, default: Date.now }
+  }],
   isApproved: { 
     type: Boolean, 
     default: function() {

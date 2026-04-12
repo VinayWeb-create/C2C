@@ -1,6 +1,6 @@
 import express from 'express';
 import {
-  register, login, getMe,
+  register, login, getMe, addBadge,
   updateProfile, changePassword, logout,
   forgotPassword, verifyOTP, resetPassword,
 } from '../controllers/authController.js';
@@ -14,6 +14,7 @@ router.post('/login',    authLimiter, login);
 router.post('/logout',   protect,     logout);
 router.get ('/me',       protect,     getMe);
 router.put ('/profile',  protect,     updateProfile);
+router.put ('/add-badge', protect,     addBadge);
 router.put ('/change-password', protect, changePassword);
 
 // Password Reset (Public)

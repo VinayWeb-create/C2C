@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   AcademicCapIcon, 
   VideoCameraIcon, 
@@ -9,19 +9,28 @@ import {
   ArrowDownTrayIcon,
   LightBulbIcon,
   BriefcaseIcon,
-  LockClosedIcon
+  LockClosedIcon,
+  StarIcon,
+  TrophyIcon
 } from '@heroicons/react/24/outline';
 import { CATEGORIES, CATEGORY_ICONS } from '../utils/helpers';
 import { LEARNING_DATA } from '../data/learningResources';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import api from '../api/axios';
+import toast from 'react-hot-toast';
 
 const LearningPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState(CATEGORIES[0]);
   const [activeTab, setActiveTab] = useState('roadmap'); 
+  
+  // Test State
+  const [answers, setAnswers] = useState({});
+  const [testResult, setTestResult] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const data = LEARNING_DATA[selectedCategory] || { roadmap: [], youtube: [], notes: [], test: [], projects: [] };
 
@@ -32,6 +41,41 @@ const LearningPage = () => {
     { id: 'projects', label: 'Hands-on Projects', icon: BriefcaseIcon, protected: true },
     { id: 'test',     label: 'Skill Test',        icon: CheckCircleIcon, protected: true },
   ];
+
+  const handleOptionSelect = (questionId, option) => {
+    setAnswers({ ...answers, [questionId]: option });
+  };
+
+  const submitTest = async () => {
+    if (Object.keys(answers).length < data.test.length) {
+      toast.error('Please answer all questions before submitting.');
+      return;
+    }
+
+    setSubmitting(true);
+    let correctCount = 0;
+    data.test.forEach(q => {
+      if (answers[q.id] === q.answer) correctCount++;
+    });
+
+    const score = (correctCount / data.test.length) * 100;
+    setTestResult({ score, correct: correctCount, total: data.test.length });
+
+    if (score === 100) {
+      try {
+        await api.put('/auth/add-badge', { 
+          name: `Professional Provider (${selectedCategory})`,
+          role: selectedCategory 
+        });
+        toast.success(`🎉 Congratulations! You earned the Professional Provider Badge for ${selectedCategory}!`);
+      } catch (err) {
+        console.error('Badge update failed');
+      }
+    }
+    setSubmitting(false);
+  };
+
+  const hasBadge = user?.badges?.some(b => b.role === selectedCategory);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -45,7 +89,11 @@ const LearningPage = () => {
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat}
-                  onClick={() => setSelectedCategory(cat)}
+                  onClick={() => {
+                    setSelectedCategory(cat);
+                    setTestResult(null);
+                    setAnswers({});
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
                     selectedCategory === cat 
                       ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/20 translate-x-1' 
@@ -64,14 +112,26 @@ const LearningPage = () => {
         <main className="flex-1 min-w-0">
           {/* Header */}
           <div className="mb-8">
-            <div className="flex items-center gap-4 mb-2">
-              <div className="p-3 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
-                <span className="text-4xl">{CATEGORY_ICONS[selectedCategory]}</span>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
+                  <span className="text-4xl">{CATEGORY_ICONS[selectedCategory]}</span>
+                </div>
+                <div>
+                  <h1 className="text-3xl font-black text-gray-900 dark:text-white">{selectedCategory} Academy</h1>
+                  <p className="text-gray-500 dark:text-gray-400">Master the skills needed for a professional freelancing career.</p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{selectedCategory} Academy</h1>
-                <p className="text-gray-500 dark:text-gray-400">Master the skills needed for a professional freelancing career.</p>
-              </div>
+
+              {hasBadge && (
+                <div className="flex items-center gap-3 p-3 px-5 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-2xl shadow-xl shadow-amber-600/20">
+                  <TrophyIcon className="w-6 h-6 animate-bounce" />
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-80">Credential Earned</p>
+                    <p className="text-sm font-bold">Verified Professional</p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Tabs */}
@@ -151,7 +211,7 @@ const LearningPage = () => {
                 {/* YouTube Content */}
                 {activeTab === 'youtube' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {data.youtube.length > 0 ? data.youtube.map((video) => (
+                    {data.youtube.map((video) => (
                       <div key={video.id} className="card overflow-hidden group">
                         <div className="relative aspect-video">
                           <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover" />
@@ -166,19 +226,14 @@ const LearningPage = () => {
                           <p className="text-xs text-gray-500">{video.channel}</p>
                         </div>
                       </div>
-                    )) : (
-                      <div className="col-span-full py-20 text-center bg-white dark:bg-gray-900 rounded-3xl border-2 border-dashed border-gray-200 dark:border-gray-800">
-                        <VideoCameraIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-500">More videos coming soon for this category.</p>
-                      </div>
-                    )}
+                    ))}
                   </div>
                 )}
 
                 {/* Notes Content */}
                 {activeTab === 'notes' && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {data.notes.length > 0 ? data.notes.map((note) => (
+                    {data.notes.map((note) => (
                       <div key={note.id} className="flex items-center gap-4 p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-primary-500 transition-all">
                         <div className="w-12 h-12 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center">
                            <DocumentTextIcon className="w-6 h-6 text-gray-400" />
@@ -191,19 +246,14 @@ const LearningPage = () => {
                           <ArrowDownTrayIcon className="w-5 h-5" />
                         </button>
                       </div>
-                    )) : (
-                      <div className="col-span-full py-20 text-center bg-white dark:bg-gray-900 rounded-3xl border-2 border-dashed border-gray-200 dark:border-gray-800">
-                         <DocumentTextIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-500">Resources are being prepared for {selectedCategory}.</p>
-                      </div>
-                    )}
+                    ))}
                   </div>
                 )}
 
                 {/* Projects Content (Protected) */}
                 {activeTab === 'projects' && user && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {data.projects.length > 0 ? data.projects.map((project) => (
+                    {data.projects.map((project) => (
                       <div key={project.id} className="p-8 bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-xl transition-all group">
                         <div className="flex items-center justify-between mb-4">
                            <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
@@ -221,23 +271,40 @@ const LearningPage = () => {
                           Start Project Experience
                         </button>
                       </div>
-                    )) : (
-                       <div className="col-span-full py-20 text-center bg-white dark:bg-gray-900 rounded-3xl border-2 border-dashed border-gray-200 dark:border-gray-800">
-                        <BriefcaseIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-500">Real-world project briefs are being added for {selectedCategory}.</p>
-                      </div>
-                    )}
+                    ))}
                   </div>
                 )}
 
                 {/* Test Content (Protected) */}
                 {activeTab === 'test' && user && (
                   <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 p-8">
-                    {data.test.length > 0 ? (
+                    {testResult ? (
+                      <div className="flex flex-col items-center py-10 text-center animate-in fade-in duration-500">
+                        {testResult.score === 100 ? (
+                           <>
+                             <div className="w-24 h-24 bg-amber-100 dark:bg-amber-900/40 rounded-full flex items-center justify-center mb-6 ring-8 ring-amber-50 dark:ring-amber-900/20">
+                               <TrophyIcon className="w-12 h-12 text-amber-600" />
+                             </div>
+                             <h3 className="text-3xl font-black text-gray-900 dark:text-white mb-2">Perfect Merit!</h3>
+                             <p className="text-gray-500 mb-8 max-w-sm">You scored 100% and earned the <strong>Professional Badge</strong>. You can now register as a provider for {selectedCategory} projects.</p>
+                             <button onClick={() => navigate('/register', { state: { role: 'provider' } })} className="btn-primary py-4 px-10 rounded-2xl">Register as Provider →</button>
+                           </>
+                        ) : (
+                          <>
+                             <div className="w-24 h-24 bg-rose-100 rounded-full flex items-center justify-center mb-6">
+                               <LockClosedIcon className="w-12 h-12 text-rose-600" />
+                             </div>
+                             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Score: {testResult.score}%</h3>
+                             <p className="text-gray-500 mb-8 max-w-sm">You need 100% merit to earn the badge. Review the notes and try again!</p>
+                             <button onClick={() => setTestResult(null)} className="btn-secondary">Restart Assessment</button>
+                          </>
+                        )}
+                      </div>
+                    ) : (
                       <div>
                         <div className="flex items-center gap-3 mb-8 p-4 bg-amber-50 dark:bg-amber-900/10 rounded-2xl border border-amber-100 dark:border-amber-800/20">
                           <LightBulbIcon className="w-6 h-6 text-amber-600" />
-                          <p className="text-xs text-amber-800 dark:text-amber-200 sm:text-sm">Pass this test with 80% or more to earn a "Verified Expert" badge on your profile!</p>
+                          <p className="text-xs text-amber-800 dark:text-amber-200 sm:text-sm">Pass this merit test with <strong>100% score</strong> to unlock the Professional Provider Badge!</p>
                         </div>
                         
                         <div className="space-y-12">
@@ -247,9 +314,17 @@ const LearningPage = () => {
                                 <span className="text-primary-600 mr-2">{idx + 1}.</span>
                                 {item.question}
                               </p>
-                              <div className="grid grid-cols-1 gap-3">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 {item.options.map(opt => (
-                                  <button key={opt} className="w-full p-4 rounded-xl border border-gray-100 dark:border-gray-800 text-left hover:border-primary-500 hover:bg-primary-50/50 dark:hover:bg-primary-900/10 transition-all text-sm font-medium text-gray-700 dark:text-gray-300">
+                                  <button 
+                                    key={opt} 
+                                    onClick={() => handleOptionSelect(item.id, opt)}
+                                    className={`w-full p-4 rounded-xl border text-left transition-all text-sm font-bold ${
+                                      answers[item.id] === opt 
+                                        ? 'border-primary-600 bg-primary-50 dark:bg-primary-900/10 text-primary-600' 
+                                        : 'border-gray-100 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:border-primary-500'
+                                    }`}
+                                  >
                                     {opt}
                                   </button>
                                 ))}
@@ -258,15 +333,14 @@ const LearningPage = () => {
                           ))}
                         </div>
                         <div className="mt-12 flex justify-center">
-                          <button className="btn-primary px-12 py-4 rounded-2xl shadow-xl shadow-primary-600/20">
-                            Submit Assessment
+                          <button 
+                            onClick={submitTest}
+                            disabled={submitting}
+                            className="btn-primary px-12 py-4 rounded-2xl shadow-xl shadow-primary-600/20"
+                          >
+                            {submitting ? 'Evaluating...' : 'Submit Assessment'}
                           </button>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="py-20 text-center">
-                        <CheckCircleIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-500">Practice tests for {selectedCategory} will be available soon.</p>
                       </div>
                     )}
                   </div>
@@ -280,23 +354,27 @@ const LearningPage = () => {
           <section className="mt-20 p-12 rounded-[3rem] bg-gradient-to-br from-gray-900 to-black text-white relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary-600/20 rounded-full blur-[100px]" />
             <div className="relative z-10">
-              <h2 className="text-3xl font-bold mb-4 text-center">Your Path to C2C Professional Hub</h2>
+              <h2 className="text-3xl font-black mb-4 text-center">Your Merit Path to C2C Professional Hub</h2>
               <p className="text-gray-400 text-center max-w-2xl mx-auto mb-12">
-                We don't just provide resources; we provide a career path. Follow these steps to become a 
-                high-earning freelancer on our platform.
+                We don't just provide resources; we provide a career path. You must prove your skills to earn your badge.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
                 {[
-                  { title: 'Learn', desc: 'Complete the roadmaps and watch the curated high-quality sessions.' },
-                  { title: 'Test', desc: 'Pass our skill assessments to verify your expertise to clients.' },
-                  { title: 'Earn', desc: 'Get the Verified Pro badge and gain priority in project matching.' }
-                ].map((step, idx) => (
-                  <div key={idx} className="p-6">
-                    <div className="text-5xl font-black text-primary-500/20 mb-4 tracking-tighter">0{idx + 1}</div>
-                    <h3 className="text-xl font-bold mb-2">{step.title}</h3>
-                    <p className="text-sm text-gray-400">{step.desc}</p>
-                  </div>
-                ))}
+                  { title: 'Learn', icon: AcademicCapIcon, desc: 'Complete the roadmaps and watch the curated high-quality sessions.' },
+                  { title: 'Achieve 100%', icon: TrophyIcon, desc: 'Score 100% in our skill assessments to earn your merit badge.' },
+                  { title: 'Unlock Pro', icon: StarIcon, desc: 'Once badged, register as a provider and start applying for projects.' }
+                ].map((step, idx) => {
+                   const Icon = step.icon;
+                   return (
+                    <div key={idx} className="p-8 bg-white/5 backdrop-blur-sm rounded-[2rem] border border-white/10">
+                      <div className="w-12 h-12 bg-primary-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <Icon className="w-6 h-6 text-primary-500" />
+                      </div>
+                      <h3 className="text-xl font-bold mb-2">{step.title}</h3>
+                      <p className="text-xs text-gray-400 leading-relaxed">{step.desc}</p>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           </section>

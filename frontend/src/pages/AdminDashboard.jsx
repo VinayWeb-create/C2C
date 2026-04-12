@@ -19,7 +19,10 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  Eye
+  Eye,
+  Plus,
+  Target,
+  Trophy
 } from 'lucide-react';
 import { 
   LineChart, Line, BarChart, Bar, 
@@ -27,7 +30,7 @@ import {
   PieChart, Pie, Cell, Legend
 } from 'recharts';
 import api from '../api/axios';
-import { formatPrice, formatDate } from '../utils/helpers';
+import { formatPrice, formatDate, CATEGORIES } from '../utils/helpers';
 import Loader from '../components/common/Loader';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -39,13 +42,20 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [providers, setProviders] = useState([]);
   const [pendingProviders, setPendingProviders] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [earningsData, setEarningsData] = useState([]);
   const [statusData, setStatusData] = useState([]);
   const [categoryData, setCategoryData] = useState([]);
   const [topProviders, setTopProviders] = useState([]);
   const [recentBookings, setRecentBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview'); // overview, approvals, users, providers, analytics
+  const [activeTab, setActiveTab] = useState('overview'); // overview, approvals, projects, users, providers
+
+  // Project Form State
+  const [showProjectForm, setShowProjectForm] = useState(false);
+  const [projectForm, setProjectForm] = useState({
+    title: '', description: '', budget: '', category: CATEGORIES[0], skillsRequired: ''
+  });
 
   useEffect(() => {
     fetchData();
@@ -54,30 +64,59 @@ const AdminDashboard = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [statsRes, usersRes, providersRes, earningsRes, pendingRes] = await Promise.all([
+      const [statsRes, usersRes, providersRes, earningsRes, pendingRes, projectsRes] = await Promise.all([
         api.get('/admin/stats'),
         api.get('/admin/users'),
         api.get('/admin/providers'),
         api.get('/admin/earnings'),
-        api.get('/admin/providers/pending')
+        api.get('/admin/providers/pending'),
+        api.get('/projects')
       ]);
 
-      const data = statsRes.data;
-      setStats(data.stats);
-      setStatusData(data.bookingStatusData || []);
-      setCategoryData(data.categoryDistribution || []);
-      setTopProviders(data.topProviders || []);
-      setRecentBookings(data.recentBookings || []);
+      setStats(statsRes.data.stats);
+      setStatusData(statsRes.data.bookingStatusData || []);
+      setCategoryData(statsRes.data.categoryDistribution || []);
+      setTopProviders(statsRes.data.topProviders || []);
+      setRecentBookings(statsRes.data.recentBookings || []);
       
       setUsers(usersRes.data.users || []);
       setProviders(providersRes.data.providers || []);
       setPendingProviders(pendingRes.data.providers || []);
       setEarningsData(earningsRes.data.earningsByMonth || []);
+      setProjects(projectsRes.data.projects || []);
     } catch (err) {
       console.error('Admin Fetch Error:', err);
       toast.error('Failed to fetch comprehensive admin data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePostProject = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = {
+        ...projectForm,
+        budget: parseFloat(projectForm.budget),
+        skillsRequired: projectForm.skillsRequired.split(',').map(s => s.trim())
+      };
+      await api.post('/projects', payload);
+      toast.success('Corporate project posted successfully! 🚀');
+      setShowProjectForm(false);
+      setProjectForm({ title: '', description: '', budget: '', category: CATEGORIES[0], skillsRequired: '' });
+      fetchData();
+    } catch {
+      toast.error('Failed to post project');
+    }
+  };
+
+  const handeAssign = async (projectId, providerId) => {
+    try {
+      await api.put(`/projects/${projectId}/assign`, { providerId });
+      toast.success('Project assigned! Communication channel opened.');
+      fetchData();
+    } catch {
+      toast.error('Assignment failed');
     }
   };
 
@@ -106,7 +145,7 @@ const AdminDashboard = () => {
     { label: 'Total Users', value: stats?.users || 0, icon: UsersGroup, color: 'text-blue-600', bg: 'bg-blue-50', trend: '+12%', isUp: true },
     { label: 'Verified Providers', value: stats?.providers || 0, icon: ShieldCheck, color: 'text-purple-600', bg: 'bg-purple-50', trend: '+5%', isUp: true },
     { label: 'Net Revenue', value: formatPrice(stats?.earnings || 0), icon: IndianRupee, color: 'text-green-600', bg: 'bg-green-50', trend: '+24%', isUp: true },
-    { label: 'Pending Approvals', value: pendingProviders.length, icon: Clock, color: 'text-rose-600', bg: 'bg-rose-50', trend: 'Priority', isUp: false },
+    { label: 'Active Projects', value: projects.length, icon: Target, color: 'text-amber-600', bg: 'bg-amber-50', trend: 'Market', isUp: true },
   ];
 
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950"><Loader size="lg" /></div>;
@@ -119,17 +158,16 @@ const AdminDashboard = () => {
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="p-1 px-2 bg-primary-600 text-white text-[10px] font-bold rounded-lg uppercase tracking-widest">Admin</span>
-              <h1 className="text-3xl font-black text-gray-900 dark:text-white">Operations Command</h1>
+              <span className="p-1 px-2 bg-primary-600 text-white text-[10px] font-bold rounded-lg uppercase tracking-widest">Master Admin</span>
+              <h1 className="text-3xl font-black text-gray-900 dark:text-white">CTOC Command Center</h1>
             </div>
-            <p className="text-gray-500 dark:text-gray-400">Complete visibility into your C2C freelancing ecosystem.</p>
+            <p className="text-gray-500 dark:text-gray-400">Managing the transition from Campus to Corporate.</p>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={fetchData} className="btn-secondary py-2.5 px-5 flex items-center gap-2">
-              <Activity className="w-4 h-4" />
-              Refresh
+            <button onClick={() => setShowProjectForm(true)} className="btn-primary py-2.5 px-6 flex items-center gap-2 shadow-xl shadow-primary-600/20">
+              <Plus className="w-4 h-4" />
+              Post Corporate Project
             </button>
-            <button className="btn-primary py-2.5 px-6 shadow-xl shadow-primary-600/20">Generate Report</button>
           </div>
         </header>
 
@@ -148,7 +186,7 @@ const AdminDashboard = () => {
                     <Icon className="w-6 h-6" />
                   </div>
                   <div className={`flex items-center gap-1 text-[10px] font-black uppercase px-2 py-1 rounded-full ${card.isUp ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'}`}>
-                    {card.isUp ? <ArrowUp className="w-3 h-3" /> : (card.trend === 'Priority' ? <Clock className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                    {card.isUp ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
                     {card.trend}
                   </div>
                 </div>
@@ -163,10 +201,10 @@ const AdminDashboard = () => {
         <nav className="flex flex-wrap gap-2 mb-8 p-1.5 bg-gray-200/40 dark:bg-gray-800/40 rounded-3xl w-fit">
           {[
             { id: 'overview', label: 'Overview' },
+            { id: 'projects', label: 'Market Projects' },
             { id: 'approvals', label: `Pending Approvals (${pendingProviders.length})` },
             { id: 'users', label: 'Users' },
             { id: 'providers', label: 'Providers' },
-            { id: 'analytics', label: 'Analytics' }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -199,17 +237,9 @@ const AdminDashboard = () => {
                   <div className="lg:col-span-2 bg-white dark:bg-gray-900 rounded-[2.5rem] p-10 shadow-sm border border-gray-100 dark:border-gray-800">
                     <div className="flex items-center justify-between mb-10">
                       <div>
-                        <h2 className="text-2xl font-black text-gray-900 dark:text-white">Financial Growth</h2>
-                        <p className="text-sm text-gray-400">Monthly revenue trends throughout the year.</p>
+                        <h2 className="text-2xl font-black text-gray-900 dark:text-white">Revenue Growth</h2>
+                        <p className="text-sm text-gray-400">Monthly profit analysis.</p>
                       </div>
-                      <select 
-                        id="year-selector"
-                        name="year-selector"
-                        className="bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm font-bold px-4 py-2 text-gray-900 dark:text-white"
-                      >
-                        <option>2024 (Current)</option>
-                        <option>2023</option>
-                      </select>
                     </div>
                     <div className="h-[350px]">
                       <ResponsiveContainer width="100%" height="100%">
@@ -221,184 +251,92 @@ const AdminDashboard = () => {
                             </linearGradient>
                           </defs>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                          <XAxis 
-                            dataKey="_id" 
-                            tickFormatter={(val) => `Month ${val}`} 
-                            axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 700}}
-                          />
-                          <YAxis 
-                            axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 700}}
-                            tickFormatter={(val) => `₹${val}`}
-                          />
-                          <Tooltip 
-                            contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.1)' }}
-                            formatter={(val) => [formatPrice(val), 'Revenue']}
-                          />
+                          <XAxis dataKey="_id" tickFormatter={(val) => `M${val}`} axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 700}}/>
+                          <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 700}} tickFormatter={(val) => `₹${val}`}/>
+                          <Tooltip contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.1)' }}/>
                           <Area type="monotone" dataKey="total" stroke="#4f46e5" strokeWidth={5} fillOpacity={1} fill="url(#chartGradient)" />
                         </AreaChart>
                       </ResponsiveContainer>
                     </div>
                   </div>
 
-                  {/* Booking Status Pie Chart */}
-                  <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] p-10 shadow-sm border border-gray-100 dark:border-gray-800">
-                    <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2">Project Success</h2>
-                    <p className="text-sm text-gray-400 mb-8">Breakdown of booking outcomes.</p>
-                    <div className="h-[300px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={statusData}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={70}
-                            outerRadius={100}
-                            paddingAngle={8}
-                            dataKey="count"
-                            nameKey="_id"
-                          >
-                            {statusData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Tooltip />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 mt-4">
-                      {statusData.length > 0 ? statusData.map((s, idx) => (
-                        <div key={s._id} className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[idx % COLORS.length] }} />
-                          <span className="text-[10px] font-bold text-gray-500 uppercase">{s._id}: {s.count}</span>
-                        </div>
-                      )) : <p className="text-xs text-gray-400 col-span-2">No data yet</p>}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  {/* Category Popularity Bar Chart */}
-                  <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] p-10 shadow-sm border border-gray-100 dark:border-gray-800">
-                    <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2">Domain Popularity</h2>
-                    <p className="text-sm text-gray-400 mb-10">Total services listed per category.</p>
-                    <div className="h-[300px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={categoryData} layout="vertical">
-                          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                          <XAxis type="number" hide />
-                          <YAxis 
-                            dataKey="_id" 
-                            type="category" 
-                            axisLine={false} tickLine={false} 
-                            tick={{fill: '#475569', fontSize: 10, fontWeight: 800}} 
-                            width={100}
-                          />
-                          <Tooltip cursor={{fill: 'transparent'}} />
-                          <Bar dataKey="count" fill="#3b82f6" radius={[0, 10, 10, 0]} barSize={20} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-
                   {/* Top Performers (Providers) */}
                   <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] p-10 shadow-sm border border-gray-100 dark:border-gray-800">
-                    <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2">Alpha Performers</h2>
-                    <p className="text-sm text-gray-400 mb-10">Top earning providers in the system.</p>
+                    <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2">Alpha Providers</h2>
+                    <p className="text-sm text-gray-400 mb-10">Highest merit badge holders.</p>
                     <div className="space-y-6">
-                      {topProviders.length > 0 ? topProviders.map((prov, idx) => (
+                      {providers.slice(0, 5).map((prov, idx) => (
                         <div key={prov._id} className="flex items-center justify-between group">
                           <div className="flex items-center gap-4">
-                            <div className="relative">
-                              <div className="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center font-black text-primary-600">
-                                {prov.details?.name ? prov.details.name[0] : '?'}
-                              </div>
-                              <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-400 flex items-center justify-center text-[10px] font-black text-white border-2 border-white dark:border-gray-900">
-                                {idx + 1}
-                              </div>
+                            <div className="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center font-black text-primary-600">
+                                {prov.name[0]}
                             </div>
                             <div>
-                              <h4 className="font-bold text-gray-900 dark:text-white group-hover:text-primary-600 transition-colors">{prov.details?.name || 'Unknown'}</h4>
-                              <p className="text-xs text-gray-500">{prov.count} Successful Projects</p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-black text-gray-900 dark:text-white">{formatPrice(prov.totalEarnings)}</p>
-                            <div className="flex items-center justify-end gap-1 text-[10px] text-amber-500 font-bold">
-                              <Star className="w-3 h-3 fill-current" />
-                              4.9
+                              <h4 className="font-bold text-gray-900 dark:text-white">{prov.name}</h4>
+                              <div className="flex items-center gap-1">
+                                {(prov.badges || []).map(b => (
+                                  <Trophy key={b.name} className="w-3 h-3 text-amber-500" />
+                                ))}
+                                <span className="text-[9px] font-black text-gray-400">{(prov.badges || []).length} Badges</span>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      )) : <p className="text-sm text-gray-400">No providers found</p>}
+                      ))}
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
 
-                {/* Recent Bookings Table (Detailed) */}
-                <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800">
-                   <div className="p-10 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                     <div>
-                       <h2 className="text-2xl font-black text-gray-900 dark:text-white">Live Operations</h2>
-                       <p className="text-sm text-gray-400">Real-time booking and project activity.</p>
-                     </div>
-                     <button className="text-xs font-black uppercase tracking-widest text-primary-600">View All Bookings →</button>
-                   </div>
-                   <div className="overflow-x-auto">
-                     <table className="w-full text-left">
-                       <thead className="bg-gray-50 dark:bg-gray-800/50 text-[10px] font-black uppercase tracking-widest text-gray-400">
-                         <tr>
-                           <th className="px-10 py-5">Client & Service</th>
-                           <th className="px-10 py-5">Provider</th>
-                           <th className="px-10 py-5">Date</th>
-                           <th className="px-10 py-5">Price</th>
-                           <th className="px-10 py-5">Status</th>
-                         </tr>
-                       </thead>
-                       <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
-                         {recentBookings.map((booking) => (
-                           <tr key={booking._id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition">
-                             <td className="px-10 py-6">
-                               <div className="flex items-center gap-4">
-                                  <div className="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 font-bold text-sm">
-                                    {booking.user?.name ? booking.user.name[0] : '?'}
-                                  </div>
-                                  <div>
-                                    <p className="text-sm font-bold text-gray-900 dark:text-white">{booking.user?.name || 'Unknown'}</p>
-                                    <p className="text-xs text-gray-400">{booking.service?.title || 'Unknown Service'}</p>
-                                  </div>
-                               </div>
-                             </td>
-                             <td className="px-10 py-6">
-                               <div className="flex items-center gap-2">
-                                 <Briefcase className="w-4 h-4 text-gray-300" />
-                                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{booking.provider?.name || 'Unknown'}</span>
-                               </div>
-                             </td>
-                             <td className="px-10 py-6">
-                               <div className="flex items-center gap-2 text-xs text-gray-500 font-medium">
-                                 <Calendar className="w-4 h-4" />
-                                 {formatDate(booking.bookingDate)}
-                               </div>
-                             </td>
-                             <td className="px-10 py-6">
-                               <span className="text-sm font-black text-gray-900 dark:text-white">{formatPrice(booking.pricing.totalAmount)}</span>
-                             </td>
-                             <td className="px-10 py-6">
-                               <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                                 booking.status === 'completed' ? 'bg-green-100 text-green-700' :
-                                 booking.status === 'pending'   ? 'bg-amber-100 text-amber-700' :
-                                 booking.status === 'cancelled' ? 'bg-red-100 text-red-700' :
-                                 'bg-blue-100 text-blue-700'
-                               }`}>
-                                 {booking.status}
-                               </span>
-                             </td>
-                           </tr>
-                         ))}
-                       </tbody>
-                     </table>
-                   </div>
-                </div>
+            {activeTab === 'projects' && (
+              <div className="space-y-6">
+                 <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] p-10 border border-gray-100 dark:border-gray-800">
+                    <h2 className="text-3xl font-black text-gray-900 dark:text-white">Active Corporate Contracts</h2>
+                    <p className="text-gray-500">Manage high-value projects and assign them to verified providers.</p>
+                 </div>
+
+                 <div className="grid grid-cols-1 gap-6">
+                    {projects.map(project => (
+                      <div key={project._id} className="bg-white dark:bg-gray-900 rounded-[2.5rem] p-8 border border-gray-100 dark:border-gray-800">
+                         <div className="flex justify-between items-start mb-6">
+                            <div>
+                               <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-[10px] font-black uppercase tracking-widest mb-2 inline-block">{project.category}</span>
+                               <h3 className="text-xl font-black text-gray-900 dark:text-white">{project.title}</h3>
+                               <p className="text-sm text-gray-500 mt-1">{project.description}</p>
+                            </div>
+                            <div className="text-right">
+                               <p className="text-2xl font-black text-gray-900 dark:text-white">{formatPrice(project.budget)}</p>
+                               <p className="text-[10px] font-black uppercase text-gray-400 mt-1">Status: {project.status}</p>
+                            </div>
+                         </div>
+
+                         {project.status === 'open' && (
+                           <div className="mt-8 pt-8 border-t border-gray-50 dark:border-gray-800">
+                              <h4 className="text-sm font-black text-gray-900 dark:text-white mb-4 uppercase tracking-widest">Applicants ({project.applications?.length || 0})</h4>
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                 {(project.applications || []).map(app => (
+                                   <div key={app._id} className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700">
+                                      <div className="flex items-center gap-3 mb-3">
+                                         <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center font-bold text-xs">{app.provider?.name?.[0]}</div>
+                                         <span className="text-xs font-bold text-gray-900 dark:text-white">{app.provider?.name}</span>
+                                      </div>
+                                      <p className="text-[10px] text-gray-500 mb-4 line-clamp-2">Notes: {app.notes || 'No message'}</p>
+                                      <button 
+                                        onClick={() => handeAssign(project._id, app.provider?._id)}
+                                        className="w-full py-2 bg-primary-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest"
+                                      >
+                                        Assign Project
+                                      </button>
+                                   </div>
+                                 ))}
+                                 {project.applications?.length === 0 && <p className="text-xs text-gray-400">Waiting for applications...</p>}
+                              </div>
+                           </div>
+                         )}
+                      </div>
+                    ))}
+                 </div>
               </div>
             )}
 
@@ -418,57 +356,36 @@ const AdminDashboard = () => {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {pendingProviders.map((prov) => (
-                      <motion.div 
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        key={prov._id} 
-                        className="bg-white dark:bg-gray-900 rounded-[2.5rem] p-8 border border-gray-100 dark:border-gray-800 flex flex-col justify-between"
-                      >
+                      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} key={prov._id} className="bg-white dark:bg-gray-900 rounded-[2.5rem] p-8 border border-gray-100 dark:border-gray-800 flex flex-col justify-between">
                         <div>
                           <div className="flex items-center gap-4 mb-6">
-                            <div className="w-14 h-14 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl font-black">
-                              {prov.name[0]}
-                            </div>
+                            <div className="w-14 h-14 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl font-black">{prov.name?.[0]}</div>
                             <div>
                               <h3 className="text-lg font-black text-gray-900 dark:text-white">{prov.name}</h3>
                               <p className="text-sm text-gray-400 font-medium">{prov.email}</p>
                             </div>
                           </div>
-
                           <div className="space-y-4 mb-8">
                              <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl">
-                               <p className="text-[10px] font-black uppercase text-gray-400 mb-1 tracking-widest">Education & Status</p>
-                               <p className="text-xs font-bold text-gray-700 dark:text-gray-200">{prov.professionalInfo?.education || 'Not provided'} • {prov.professionalInfo?.currentStatus || 'Self-Employed'}</p>
+                                <p className="text-[10px] font-black uppercase text-gray-400 mb-1 tracking-widest">Merit Badges</p>
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                   {(prov.badges || []).map(b => (
+                                     <span key={b.name} className="px-3 py-1 bg-amber-100 text-amber-700 text-[9px] font-black rounded-full flex items-center gap-1">
+                                       <Trophy className="w-3 h-3" /> {b.name}
+                                     </span>
+                                   ))}
+                                   {(prov.badges || []).length === 0 && <span className="text-xs text-amber-600 italic">No professional badges earned</span>}
+                                </div>
                              </div>
                              <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl">
-                               <p className="text-[10px] font-black uppercase text-gray-400 mb-1 tracking-widest">Skills & Expertise</p>
-                               <div className="flex flex-wrap gap-1 mt-1">
-                                 {prov.professionalInfo?.skills?.length > 0 ? prov.professionalInfo.skills.map(s => (
-                                   <span key={s} className="px-2 py-1 bg-white dark:bg-gray-700 text-[9px] font-black rounded-lg border border-gray-100 dark:border-gray-600 uppercase text-primary-600">{s}</span>
-                                 )) : <span className="text-xs text-gray-400 italic">No skills listed</span>}
-                               </div>
+                               <p className="text-[10px] font-black uppercase text-gray-400 mb-1 tracking-widest">Education & Status</p>
+                               <p className="text-xs font-bold text-gray-700 dark:text-gray-200">{prov.professionalInfo?.education || 'No info'}</p>
                              </div>
-                             {prov.professionalInfo?.portfolioUrl && (
-                               <a href={prov.professionalInfo.portfolioUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-primary-600 text-xs font-bold hover:underline">
-                                 <Eye className="w-4 h-4" /> View Portfolio / Resume
-                               </a>
-                             )}
                           </div>
                         </div>
-
                         <div className="flex gap-3">
-                          <button 
-                            onClick={() => handleApprove(prov._id)}
-                            className="flex-1 py-3 bg-primary-600 hover:bg-primary-700 text-white font-black rounded-2xl text-xs uppercase tracking-widest transition shadow-lg shadow-primary-600/20"
-                          >
-                            Approve
-                          </button>
-                          <button 
-                            onClick={() => handleReject(prov._id)}
-                            className="flex-1 py-3 bg-rose-50 hover:bg-rose-100 text-rose-600 font-black rounded-2xl text-xs uppercase tracking-widest transition border border-rose-100"
-                          >
-                            Reject
-                          </button>
+                          <button onClick={() => handleApprove(prov._id)} className="flex-1 py-3 bg-primary-600 text-white font-black rounded-2xl text-xs uppercase tracking-widest shadow-lg shadow-primary-600/20">Approve</button>
+                          <button onClick={() => handleReject(prov._id)} className="flex-1 py-3 bg-rose-50 text-rose-600 font-black rounded-2xl text-xs uppercase tracking-widest border border-rose-100">Reject</button>
                         </div>
                       </motion.div>
                     ))}
@@ -480,16 +397,10 @@ const AdminDashboard = () => {
             {activeTab === 'users' && (
               <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800">
                 <div className="px-10 py-8 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                   <h2 className="text-2xl font-black text-gray-900 dark:text-white">Active Population (Clients)</h2>
+                   <h2 className="text-2xl font-black text-gray-900 dark:text-white">Active Users</h2>
                    <div className="relative">
                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                     <input 
-                       id="user-search"
-                       name="user-search"
-                       type="text" 
-                       placeholder="Search by name or email..." 
-                       className="pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border-none rounded-2xl text-sm" 
-                     />
+                     <input type="text" placeholder="Search users..." className="pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border-none rounded-2xl text-sm" />
                    </div>
                 </div>
                 <div className="overflow-x-auto">
@@ -498,44 +409,30 @@ const AdminDashboard = () => {
                       <tr>
                         <th className="px-10 py-5">Full Name</th>
                         <th className="px-10 py-5">Contact Details</th>
-                        <th className="px-10 py-5">Location</th>
-                        <th className="px-10 py-5">Registration Date</th>
+                        <th className="px-10 py-5">Merit Info</th>
                         <th className="px-10 py-5 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
-                      {users.length > 0 ? users.map((user) => (
-                        <tr key={user._id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition">
+                      {users.map((user) => (
+                        <tr key={user._id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition text-gray-900 dark:text-white">
                           <td className="px-10 py-6">
                             <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
-                                {user.name[0]}
-                              </div>
-                              <span className="text-sm font-bold text-gray-900 dark:text-white">{user.name}</span>
+                              <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold">{user.name?.[0]}</div>
+                              <span className="text-sm font-bold">{user.name}</span>
                             </div>
                           </td>
+                          <td className="px-10 py-6 font-medium text-sm text-gray-500">{user.email}</td>
                           <td className="px-10 py-6">
-                            <p className="text-sm text-gray-700 dark:text-gray-300 font-medium">{user.email}</p>
-                            <p className="text-[10px] text-gray-400 font-bold">{user.phone || 'No phone set'}</p>
-                          </td>
-                          <td className="px-10 py-6">
-                            <div className="flex items-center gap-2 text-xs text-gray-500 font-bold">
-                               <MapPin className="w-3 h-3" />
-                               {user.location?.city || 'Not specified'}
+                            <div className="flex items-center gap-1 font-black text-amber-500 text-[10px] uppercase">
+                               <Trophy className="w-3 h-3" /> {(user.badges || []).length} Badges
                             </div>
                           </td>
-                          <td className="px-10 py-6 text-xs text-gray-400 font-medium">{formatDate(user.createdAt)}</td>
                           <td className="px-10 py-6 text-right">
-                             <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition text-gray-400">
-                               <MoreVertical className="w-4 h-4" />
-                             </button>
+                             <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition text-gray-400"><MoreVertical className="w-4 h-4" /></button>
                           </td>
                         </tr>
-                      )) : (
-                        <tr>
-                          <td colSpan="5" className="px-10 py-10 text-center text-gray-400 text-sm">No registered users found</td>
-                        </tr>
-                      )}
+                      ))}
                     </tbody>
                   </table>
                 </div>
@@ -545,71 +442,37 @@ const AdminDashboard = () => {
             {activeTab === 'providers' && (
               <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800">
                 <div className="px-10 py-8 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                   <h2 className="text-2xl font-black text-gray-900 dark:text-white">Strategic Partners (Providers)</h2>
-                   <button className="btn-primary py-2 px-6 rounded-2xl text-xs">Verified Check →</button>
+                   <h2 className="text-2xl font-black text-gray-900 dark:text-white">Verified Providers</h2>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
                     <thead className="bg-gray-50 dark:bg-gray-800/50 text-[10px] font-black uppercase tracking-widest text-gray-400">
                       <tr>
-                        <th className="px-10 py-5">Partner Name</th>
-                        <th className="px-10 py-5">Communication</th>
-                        <th className="px-10 py-5">Skill Domain</th>
-                        <th className="px-10 py-5">Status</th>
-                        <th className="px-10 py-5 text-right">Access Control</th>
+                        <th className="px-10 py-5">Full Name</th>
+                        <th className="px-10 py-5">Professional Badges</th>
+                        <th className="px-10 py-5">Active Role</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
-                      {providers.length > 0 ? providers.map((prov) => (
-                        <tr key={prov._id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition">
-                          <td className="px-10 py-6">
-                            <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center font-bold">
-                                {prov.name[0]}
-                              </div>
-                              <span className="text-sm font-bold text-gray-900 dark:text-white">{prov.name}</span>
-                            </div>
+                      {providers.map((prov) => (
+                        <tr key={prov._id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition text-gray-900 dark:text-white">
+                          <td className="px-10 py-6 flex items-center gap-4">
+                             <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center font-bold">{prov.name?.[0]}</div>
+                             <span className="text-sm font-bold">{prov.name}</span>
                           </td>
                           <td className="px-10 py-6">
-                            <p className="text-sm text-gray-700 dark:text-gray-300 font-medium">{prov.email}</p>
-                            <p className="text-[10px] text-gray-400 font-bold">{prov.phone}</p>
-                          </td>
-                          <td className="px-10 py-6">
-                            <div className="flex flex-wrap gap-1">
-                               <span className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-lg text-[9px] font-black uppercase tracking-wider text-gray-600">Pro Freelancer</span>
-                            </div>
-                          </td>
-                          <td className="px-10 py-6">
-                            <span className={`flex items-center gap-1 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full w-fit ${prov.isApproved ? 'text-green-600 bg-green-50' : 'text-amber-600 bg-amber-50'}`}>
-                              {prov.isApproved ? <ShieldCheck className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
-                              {prov.isApproved ? 'Approved' : 'Pending'}
-                            </span>
-                          </td>
-                          <td className="px-10 py-6 text-right">
-                             <div className="flex justify-end gap-2">
-                               <button className="px-3 py-1.5 bg-gray-50 dark:bg-gray-800 text-[10px] font-bold rounded-lg border border-gray-200 dark:border-gray-700">Audit</button>
-                               <button className="px-3 py-1.5 bg-red-50 text-red-600 text-[10px] font-bold rounded-lg border border-red-100">Suspend</button>
+                             <div className="flex gap-2">
+                               {(prov.badges || []).map(b => (
+                                 <span key={b.name} className="px-2 py-0.5 bg-amber-50 text-amber-600 border border-amber-100 rounded-full text-[9px] font-black uppercase tracking-widest">{b.name}</span>
+                               ))}
                              </div>
                           </td>
+                          <td className="px-10 py-6 text-xs font-bold text-gray-500">{prov.professionalInfo?.currentStatus || 'Professional'}</td>
                         </tr>
-                      )) : (
-                        <tr>
-                          <td colSpan="5" className="px-10 py-10 text-center text-gray-400 text-sm">No providers found</td>
-                        </tr>
-                      )}
+                      ))}
                     </tbody>
                   </table>
                 </div>
-              </div>
-            )}
-
-            {activeTab === 'analytics' && (
-              <div className="flex flex-col items-center justify-center py-32 bg-white dark:bg-gray-900 rounded-[2.5rem] border border-gray-100 dark:border-gray-800">
-                 <div className="w-20 h-20 bg-primary-100 dark:bg-primary-900/30 rounded-3xl flex items-center justify-center mb-6">
-                   <TrendingUp className="w-10 h-10 text-primary-600" />
-                 </div>
-                 <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2 text-center">Predictive Insights Coming Soon</h2>
-                 <p className="text-gray-500 text-center max-w-md">Our AI system is currently analyzing year-to-date data to provide revenue forecasts and domain popularity predictions.</p>
               </div>
             )}
 
@@ -617,6 +480,43 @@ const AdminDashboard = () => {
         </AnimatePresence>
 
       </div>
+
+      {/* Project Post Modal */}
+      {showProjectForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+           <div className="bg-white dark:bg-gray-900 rounded-[3rem] p-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl relative">
+              <button onClick={() => setShowProjectForm(false)} className="absolute top-8 right-8 p-2 rounded-2xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500"><XCircle /></button>
+              <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-8">Post New Contract</h2>
+              <form onSubmit={handlePostProject} className="space-y-6">
+                 <div>
+                    <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Project Title</label>
+                    <input required type="text" placeholder="e.g. Modern E-commerce Frontend Build" value={projectForm.title} onChange={e => setProjectForm({...projectForm, title: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-2xl py-4 px-6 text-sm font-bold placeholder:text-gray-300 text-gray-900 dark:text-white"/>
+                 </div>
+                 <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Category</label>
+                      <select value={projectForm.category} onChange={e => setProjectForm({...projectForm, category: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-2xl py-4 px-6 text-sm font-bold text-gray-900 dark:text-white">
+                        {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Budget (₹)</label>
+                      <input required type="number" placeholder="5000" value={projectForm.budget} onChange={e => setProjectForm({...projectForm, budget: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-2xl py-4 px-6 text-sm font-bold text-gray-900 dark:text-white"/>
+                    </div>
+                 </div>
+                 <div>
+                    <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Detailed Description</label>
+                    <textarea required rows={4} placeholder="Describe the scope, deliverables, and timeline..." value={projectForm.description} onChange={e => setProjectForm({...projectForm, description: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-2xl py-4 px-6 text-sm font-bold text-gray-900 dark:text-white resize-none"/>
+                 </div>
+                 <div>
+                    <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Required Skills (Comma separated)</label>
+                    <input required type="text" placeholder="React, Node.js, TailWind" value={projectForm.skillsRequired} onChange={e => setProjectForm({...projectForm, skillsRequired: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-2xl py-4 px-6 text-sm font-bold text-gray-900 dark:text-white"/>
+                 </div>
+                 <button type="submit" className="w-full py-5 bg-primary-600 text-white font-black rounded-3xl text-sm uppercase tracking-widest shadow-xl shadow-primary-600/30 hover:scale-[1.02] transition">Authorize & Post Contract</button>
+              </form>
+           </div>
+        </div>
+      )}
     </div>
   );
 };
