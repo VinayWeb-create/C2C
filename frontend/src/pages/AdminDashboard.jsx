@@ -1,23 +1,21 @@
 import { useState, useEffect } from 'react';
 import { 
-  UsersIcon, 
-  BriefcaseIcon, 
-  CurrencyRupeeIcon, 
-  TrendingUpIcon, 
-  UserGroupIcon,
-  ArrowUpRightIcon,
-  FilterIcon,
-  SearchIcon,
-  MoreVerticalIcon,
-  PieChartIcon,
-  BarChart3Icon,
-  CalendarIcon,
-  MapPinIcon,
-  StarIcon,
-  ShieldCheckIcon,
-  ActivityIcon,
-  ArrowDownIcon,
-  ArrowUpIcon
+  Users, 
+  Briefcase, 
+  IndianRupee, 
+  TrendingUp, 
+  Users as UsersGroup,
+  ArrowUpRight,
+  Filter,
+  Search,
+  MoreVertical,
+  Calendar,
+  MapPin,
+  Star,
+  ShieldCheck,
+  Activity,
+  ArrowDown,
+  ArrowUp
 } from 'lucide-react';
 import { 
   LineChart, Line, BarChart, Bar, 
@@ -25,7 +23,7 @@ import {
   PieChart, Pie, Cell, Legend
 } from 'recharts';
 import api from '../api/axios';
-import { formatPrice, formatDate, capitalize } from '../utils/helpers';
+import { formatPrice, formatDate } from '../utils/helpers';
 import Loader from '../components/common/Loader';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -60,15 +58,16 @@ const AdminDashboard = () => {
 
       const data = statsRes.data;
       setStats(data.stats);
-      setStatusData(data.bookingStatusData);
-      setCategoryData(data.categoryDistribution);
-      setTopProviders(data.topProviders);
-      setRecentBookings(data.recentBookings);
+      setStatusData(data.bookingStatusData || []);
+      setCategoryData(data.categoryDistribution || []);
+      setTopProviders(data.topProviders || []);
+      setRecentBookings(data.recentBookings || []);
       
-      setUsers(usersRes.data.users);
-      setProviders(providersRes.data.providers);
-      setEarningsData(earningsRes.data.earningsByMonth);
+      setUsers(usersRes.data.users || []);
+      setProviders(providersRes.data.providers || []);
+      setEarningsData(earningsRes.data.earningsByMonth || []);
     } catch (err) {
+      console.error('Admin Fetch Error:', err);
       toast.error('Failed to fetch comprehensive admin data');
     } finally {
       setLoading(false);
@@ -76,16 +75,16 @@ const AdminDashboard = () => {
   };
 
   const statCards = [
-    { label: 'Total Users', value: stats?.users || 0, icon: UserGroupIcon, color: 'text-blue-600', bg: 'bg-blue-50', trend: '+12%', isUp: true },
-    { label: 'Verified Providers', value: stats?.providers || 0, icon: ShieldCheckIcon, color: 'text-purple-600', bg: 'bg-purple-50', trend: '+5%', isUp: true },
-    { label: 'Net Revenue', value: formatPrice(stats?.earnings || 0), icon: CurrencyRupeeIcon, color: 'text-green-600', bg: 'bg-green-50', trend: '+24%', isUp: true },
-    { label: 'Active Projects', value: recentBookings.length, icon: ActivityIcon, color: 'text-amber-600', bg: 'bg-amber-50', trend: '-2%', isUp: false },
+    { label: 'Total Users', value: stats?.users || 0, icon: UsersGroup, color: 'text-blue-600', bg: 'bg-blue-50', trend: '+12%', isUp: true },
+    { label: 'Verified Providers', value: stats?.providers || 0, icon: ShieldCheck, color: 'text-purple-600', bg: 'bg-purple-50', trend: '+5%', isUp: true },
+    { label: 'Net Revenue', value: formatPrice(stats?.earnings || 0), icon: IndianRupee, color: 'text-green-600', bg: 'bg-green-50', trend: '+24%', isUp: true },
+    { label: 'Active Projects', value: recentBookings.length, icon: Activity, color: 'text-amber-600', bg: 'bg-amber-50', trend: '-2%', isUp: false },
   ];
 
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950"><Loader size="lg" /></div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 md:p-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 md:p-8 pt-20">
       <div className="max-w-7xl mx-auto">
         
         {/* Header Section */}
@@ -99,7 +98,7 @@ const AdminDashboard = () => {
           </div>
           <div className="flex items-center gap-3">
             <button onClick={fetchData} className="btn-secondary py-2.5 px-5 flex items-center gap-2">
-              <ActivityIcon className="w-4 h-4" />
+              <Activity className="w-4 h-4" />
               Refresh
             </button>
             <button className="btn-primary py-2.5 px-6 shadow-xl shadow-primary-600/20">Generate Report</button>
@@ -121,7 +120,7 @@ const AdminDashboard = () => {
                     <Icon className="w-6 h-6" />
                   </div>
                   <div className={`flex items-center gap-1 text-[10px] font-black uppercase px-2 py-1 rounded-full ${card.isUp ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'}`}>
-                    {card.isUp ? <ArrowUpIcon className="w-3 h-3" /> : <ArrowDownIcon className="w-3 h-3" />}
+                    {card.isUp ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
                     {card.trend}
                   </div>
                 </div>
@@ -233,12 +232,12 @@ const AdminDashboard = () => {
                       </ResponsiveContainer>
                     </div>
                     <div className="grid grid-cols-2 gap-2 mt-4">
-                      {statusData.map((s, idx) => (
+                      {statusData.length > 0 ? statusData.map((s, idx) => (
                         <div key={s._id} className="flex items-center gap-2">
                           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[idx % COLORS.length] }} />
                           <span className="text-[10px] font-bold text-gray-500 uppercase">{s._id}: {s.count}</span>
                         </div>
-                      ))}
+                      )) : <p className="text-xs text-gray-400 col-span-2">No data yet</p>}
                     </div>
                   </div>
                 </div>
@@ -272,31 +271,31 @@ const AdminDashboard = () => {
                     <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2">Alpha Performers</h2>
                     <p className="text-sm text-gray-400 mb-10">Top earning providers in the system.</p>
                     <div className="space-y-6">
-                      {topProviders.map((prov, idx) => (
+                      {topProviders.length > 0 ? topProviders.map((prov, idx) => (
                         <div key={prov._id} className="flex items-center justify-between group">
                           <div className="flex items-center gap-4">
                             <div className="relative">
                               <div className="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center font-black text-primary-600">
-                                {prov.details.name[0]}
+                                {prov.details?.name ? prov.details.name[0] : '?'}
                               </div>
                               <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-400 flex items-center justify-center text-[10px] font-black text-white border-2 border-white dark:border-gray-900">
                                 {idx + 1}
                               </div>
                             </div>
                             <div>
-                              <h4 className="font-bold text-gray-900 dark:text-white group-hover:text-primary-600 transition-colors">{prov.details.name}</h4>
+                              <h4 className="font-bold text-gray-900 dark:text-white group-hover:text-primary-600 transition-colors">{prov.details?.name || 'Unknown'}</h4>
                               <p className="text-xs text-gray-500">{prov.count} Successful Projects</p>
                             </div>
                           </div>
                           <div className="text-right">
                             <p className="font-black text-gray-900 dark:text-white">{formatPrice(prov.totalEarnings)}</p>
                             <div className="flex items-center justify-end gap-1 text-[10px] text-amber-500 font-bold">
-                              <StarIcon className="w-3 h-3 fill-current" />
+                              <Star className="w-3 h-3 fill-current" />
                               4.9
                             </div>
                           </div>
                         </div>
-                      ))}
+                      )) : <p className="text-sm text-gray-400">No providers found</p>}
                     </div>
                   </div>
                 </div>
@@ -327,23 +326,23 @@ const AdminDashboard = () => {
                              <td className="px-10 py-6">
                                <div className="flex items-center gap-4">
                                   <div className="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 font-bold text-sm">
-                                    {booking.user.name[0]}
+                                    {booking.user?.name ? booking.user.name[0] : '?'}
                                   </div>
                                   <div>
-                                    <p className="text-sm font-bold text-gray-900 dark:text-white">{booking.user.name}</p>
-                                    <p className="text-xs text-gray-400">{booking.service.title}</p>
+                                    <p className="text-sm font-bold text-gray-900 dark:text-white">{booking.user?.name || 'Unknown'}</p>
+                                    <p className="text-xs text-gray-400">{booking.service?.title || 'Unknown Service'}</p>
                                   </div>
                                </div>
                              </td>
                              <td className="px-10 py-6">
                                <div className="flex items-center gap-2">
-                                 <BriefcaseIcon className="w-4 h-4 text-gray-300" />
-                                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{booking.provider.name}</span>
+                                 <Briefcase className="w-4 h-4 text-gray-300" />
+                                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{booking.provider?.name || 'Unknown'}</span>
                                </div>
                              </td>
                              <td className="px-10 py-6">
                                <div className="flex items-center gap-2 text-xs text-gray-500 font-medium">
-                                 <CalendarIcon className="w-4 h-4" />
+                                 <Calendar className="w-4 h-4" />
                                  {formatDate(booking.bookingDate)}
                                </div>
                              </td>
@@ -362,6 +361,11 @@ const AdminDashboard = () => {
                              </td>
                            </tr>
                          ))}
+                         {recentBookings.length === 0 && (
+                           <tr>
+                             <td colSpan="5" className="px-10 py-10 text-center text-gray-400 text-sm">No recent activity detected</td>
+                           </tr>
+                         )}
                        </tbody>
                      </table>
                    </div>
@@ -369,13 +373,12 @@ const AdminDashboard = () => {
               </div>
             )}
 
-            {/* TAB: USERS LIST */}
             {activeTab === 'users' && (
               <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800">
                 <div className="px-10 py-8 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
                    <h2 className="text-2xl font-black text-gray-900 dark:text-white">Active Population (Clients)</h2>
                    <div className="relative">
-                     <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                      <input 
                        id="user-search"
                        name="user-search"
@@ -397,7 +400,7 @@ const AdminDashboard = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
-                      {users.map((user) => (
+                      {users.length > 0 ? users.map((user) => (
                         <tr key={user._id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition">
                           <td className="px-10 py-6">
                             <div className="flex items-center gap-4">
@@ -413,25 +416,28 @@ const AdminDashboard = () => {
                           </td>
                           <td className="px-10 py-6">
                             <div className="flex items-center gap-2 text-xs text-gray-500 font-bold">
-                               <MapPinIcon className="w-3 h-3" />
+                               <MapPin className="w-3 h-3" />
                                {user.location?.city || 'Not specified'}
                             </div>
                           </td>
                           <td className="px-10 py-6 text-xs text-gray-400 font-medium">{formatDate(user.createdAt)}</td>
                           <td className="px-10 py-6 text-right">
-                             <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition">
-                               <MoreVerticalIcon className="w-4 h-4 text-gray-400" />
+                             <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition text-gray-400">
+                               <MoreVertical className="w-4 h-4" />
                              </button>
                           </td>
                         </tr>
-                      ))}
+                      )) : (
+                        <tr>
+                          <td colSpan="5" className="px-10 py-10 text-center text-gray-400 text-sm">No registered users found</td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
               </div>
             )}
 
-            {/* TAB: PROVIDERS LIST */}
             {activeTab === 'providers' && (
               <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800">
                 <div className="px-10 py-8 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
@@ -450,7 +456,7 @@ const AdminDashboard = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
-                      {providers.map((prov) => (
+                      {providers.length > 0 ? providers.map((prov) => (
                         <tr key={prov._id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition">
                           <td className="px-10 py-6">
                             <div className="flex items-center gap-4">
@@ -471,7 +477,7 @@ const AdminDashboard = () => {
                           </td>
                           <td className="px-10 py-6">
                             <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-green-600 bg-green-50 px-3 py-1 rounded-full w-fit">
-                              <ShieldCheckIcon className="w-3 h-3" />
+                              <ShieldCheck className="w-3 h-3" />
                               Active
                             </span>
                           </td>
@@ -482,18 +488,21 @@ const AdminDashboard = () => {
                              </div>
                           </td>
                         </tr>
-                      ))}
+                      )) : (
+                        <tr>
+                          <td colSpan="5" className="px-10 py-10 text-center text-gray-400 text-sm">No providers found</td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
               </div>
             )}
 
-            {/* TAB: ANALYTICS */}
             {activeTab === 'analytics' && (
               <div className="flex flex-col items-center justify-center py-32 bg-white dark:bg-gray-900 rounded-[2.5rem] border border-gray-100 dark:border-gray-800">
                  <div className="w-20 h-20 bg-primary-100 dark:bg-primary-900/30 rounded-3xl flex items-center justify-center mb-6">
-                   <TrendingUpIcon className="w-10 h-10 text-primary-600" />
+                   <TrendingUp className="w-10 h-10 text-primary-600" />
                  </div>
                  <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2 text-center">Predictive Insights Coming Soon</h2>
                  <p className="text-gray-500 text-center max-w-md">Our AI system is currently analyzing year-to-date data to provide revenue forecasts and domain popularity predictions.</p>
