@@ -7,23 +7,30 @@ import {
   CheckCircleIcon,
   PlayIcon,
   ArrowDownTrayIcon,
-  LightBulbIcon
+  LightBulbIcon,
+  BriefcaseIcon,
+  LockClosedIcon
 } from '@heroicons/react/24/outline';
 import { CATEGORIES, CATEGORY_ICONS } from '../utils/helpers';
 import { LEARNING_DATA } from '../data/learningResources';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const LearningPage = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState(CATEGORIES[0]);
-  const [activeTab, setActiveTab] = useState('roadmap'); // roadmap, youtube, notes, test
+  const [activeTab, setActiveTab] = useState('roadmap'); 
 
-  const data = LEARNING_DATA[selectedCategory] || { roadmap: [], youtube: [], notes: [], test: [] };
+  const data = LEARNING_DATA[selectedCategory] || { roadmap: [], youtube: [], notes: [], test: [], projects: [] };
 
   const tabs = [
     { id: 'roadmap', label: 'Roadmap', icon: MapIcon },
-    { id: 'youtube', label: 'Learning Videos', icon: VideoCameraIcon },
-    { id: 'notes', label: 'Resources & Notes', icon: DocumentTextIcon },
-    { id: 'test', label: 'Practice Test', icon: CheckCircleIcon },
+    { id: 'youtube', label: 'Videos', icon: VideoCameraIcon },
+    { id: 'notes',   label: 'Notes',  icon: DocumentTextIcon },
+    { id: 'projects', label: 'Hands-on Projects', icon: BriefcaseIcon, protected: true },
+    { id: 'test',     label: 'Skill Test',        icon: CheckCircleIcon, protected: true },
   ];
 
   return (
@@ -101,6 +108,24 @@ const LearningPage = () => {
                 className="min-h-[400px]"
               >
                 
+                {/* Protected View Overlay */}
+                {tabs.find(t => t.id === activeTab)?.protected && !user && (
+                   <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-gray-900 rounded-3xl border-2 border-dashed border-gray-200 dark:border-gray-800">
+                    <div className="w-16 h-16 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center mb-6">
+                      <LockClosedIcon className="w-8 h-8 text-primary-600 dark:text-primary-400" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Login to Unlock</h3>
+                    <p className="text-gray-500 dark:text-gray-400 mb-8 text-center max-w-sm">
+                      Hands-on projects and Skill Tests are exclusively for our community members. 
+                      Sign in to start your professional journey.
+                    </p>
+                    <div className="flex gap-4">
+                      <button onClick={() => navigate('/login')} className="btn-primary">Sign In</button>
+                      <button onClick={() => navigate('/register')} className="btn-secondary">Join C2C Hub</button>
+                    </div>
+                   </div>
+                )}
+
                 {/* Roadmap Content */}
                 {activeTab === 'roadmap' && (
                   <div className="space-y-6">
@@ -156,7 +181,7 @@ const LearningPage = () => {
                     {data.notes.length > 0 ? data.notes.map((note) => (
                       <div key={note.id} className="flex items-center gap-4 p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-primary-500 transition-all">
                         <div className="w-12 h-12 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center">
-                          <DocumentTextIcon className="w-6 h-6 text-gray-400" />
+                           <DocumentTextIcon className="w-6 h-6 text-gray-400" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="text-sm font-bold text-gray-900 dark:text-white truncate">{note.title}</h3>
@@ -175,8 +200,38 @@ const LearningPage = () => {
                   </div>
                 )}
 
-                {/* Test Content */}
-                {activeTab === 'test' && (
+                {/* Projects Content (Protected) */}
+                {activeTab === 'projects' && user && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {data.projects.length > 0 ? data.projects.map((project) => (
+                      <div key={project.id} className="p-8 bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-xl transition-all group">
+                        <div className="flex items-center justify-between mb-4">
+                           <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
+                             project.difficulty === 'Easy' ? 'bg-green-100 text-green-700' :
+                             project.difficulty === 'Medium' ? 'bg-amber-100 text-amber-700' :
+                             'bg-red-100 text-red-700'
+                           }`}>
+                             {project.difficulty}
+                           </span>
+                           <BriefcaseIcon className="w-6 h-6 text-gray-300 group-hover:text-primary-500 transition-colors" />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{project.title}</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">{project.desc}</p>
+                        <button className="w-full py-3 rounded-xl border-2 border-primary-600 text-primary-600 font-bold hover:bg-primary-600 hover:text-white transition-all">
+                          Start Project Experience
+                        </button>
+                      </div>
+                    )) : (
+                       <div className="col-span-full py-20 text-center bg-white dark:bg-gray-900 rounded-3xl border-2 border-dashed border-gray-200 dark:border-gray-800">
+                        <BriefcaseIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                        <p className="text-gray-500">Real-world project briefs are being added for {selectedCategory}.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Test Content (Protected) */}
+                {activeTab === 'test' && user && (
                   <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 p-8">
                     {data.test.length > 0 ? (
                       <div>

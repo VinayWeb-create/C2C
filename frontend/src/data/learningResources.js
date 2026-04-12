@@ -20,6 +20,11 @@ export const LEARNING_DATA = {
     test: [
       { id: 1, question: 'What does CSS stand for?', options: ['Creative Style Sheets', 'Cascading Style Sheets', 'Computer Style Sheets'], answer: 'Cascading Style Sheets' },
       { id: 2, question: 'Which hook is used for side effects in React?', options: ['useState', 'useContext', 'useEffect'], answer: 'useEffect' },
+    ],
+    projects: [
+      { id: 1, title: 'Personal Portfolio Website', difficulty: 'Easy', desc: 'Build a responsive portfolio using HTML, CSS, and basic JS.' },
+      { id: 2, title: 'E-commerce Product Page', difficulty: 'Medium', desc: 'Create a dynamic product page with React and state management.' },
+      { id: 3, title: 'Real-time Chat App', difficulty: 'Hard', desc: 'Full-stack application using Socket.io and Node.js.' },
     ]
   },
   'Graphic Design': {
@@ -38,6 +43,10 @@ export const LEARNING_DATA = {
     ],
     test: [
       { id: 1, question: 'What is "Kerning" in typography?', options: ['Spacing between lines', 'Spacing between letters', 'Font weight'], answer: 'Spacing between letters' },
+    ],
+    projects: [
+      { id: 1, title: 'Corporate Brand Identity', difficulty: 'Hard', desc: 'Design a full logo set, business cards, and brand guidelines.' },
+      { id: 2, title: 'Social Media Ad Campaign', difficulty: 'Medium', desc: 'Create a set of 5 banners for a digital marketing campaign.' },
     ]
   },
   'Digital Marketing & SEO': {
@@ -54,6 +63,9 @@ export const LEARNING_DATA = {
     ],
     test: [
         { id: 1, question: 'What does "CTR" stand for?', options: ['Click Through Rate', 'Cost To Run', 'Call To Review'], answer: 'Click Through Rate' }
+    ],
+    projects: [
+      { id: 1, title: 'SEO Audit for Local Business', difficulty: 'Medium', desc: 'Conduct a full SEO audit and provide a list of improvements.' },
     ]
   },
   'UI/UX Design': {
@@ -70,8 +82,12 @@ export const LEARNING_DATA = {
     ],
     test: [
       { id: 1, question: 'What is the purpose of a wireframe?', options: ['Final visual design', 'Structural layout without styling', 'A clickable prototype'], answer: 'Structural layout without styling' }
+    ],
+    projects: [
+      { id: 1, title: 'FinTech App Redesign', difficulty: 'Hard', desc: 'Analyze an existing financial app and redesign its core workflow.' },
     ]
   },
+  // Update other categories similarly...
   'Video & Photo Editing': {
     roadmap: [
       { id: 1, title: 'Storytelling & Pacing', desc: 'Basic narrative structures in video.' },
@@ -148,7 +164,8 @@ CATEGORIES.forEach(cat => {
       roadmap: [{ id: 1, title: 'Coming Soon', desc: 'We are preparing the roadmap for ' + cat }],
       youtube: [],
       notes: [],
-      test: []
+      test: [],
+      projects: []
     };
   }
 });
