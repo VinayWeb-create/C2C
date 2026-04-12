@@ -3,7 +3,10 @@ import {
   getAdminStats, 
   getAllUsers, 
   getAllProviders, 
-  getEarningsReport 
+  getEarningsReport,
+  getPendingProviders,
+  approveProvider,
+  rejectProvider
 } from '../controllers/adminController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
 
@@ -16,6 +19,9 @@ router.use(authorize('admin'));
 router.get('/stats', getAdminStats);
 router.get('/users', getAllUsers);
 router.get('/providers', getAllProviders);
+router.get('/providers/pending', getPendingProviders);
+router.put('/providers/:id/approve', approveProvider);
+router.delete('/providers/:id/reject', rejectProvider);
 router.get('/earnings', getEarningsReport);
 
 export default router;

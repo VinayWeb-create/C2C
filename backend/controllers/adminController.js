@@ -96,3 +96,38 @@ export const getEarningsReport = asyncHandler(async (req, res) => {
 
   res.json({ success: true, earningsByMonth });
 });
+
+// @desc    Get pending provider approvals
+// @route   GET /api/admin/providers/pending
+// @access  Private/Admin
+export const getPendingProviders = asyncHandler(async (req, res) => {
+  const pending = await User.find({ role: 'provider', isApproved: false }).select('-password');
+  res.json({ success: true, providers: pending });
+});
+
+// @desc    Approve a provider
+// @route   PUT /api/admin/providers/:id/approve
+// @access  Private/Admin
+export const approveProvider = asyncHandler(async (req, res) => {
+  const provider = await User.findById(req.params.id);
+  if (!provider) {
+    res.status(404);
+    throw new Error('Provider not found');
+  }
+  provider.isApproved = true;
+  await provider.save();
+  res.json({ success: true, message: 'Provider approved successfully' });
+});
+
+// @desc    Reject/Delete a provider
+// @route   DELETE /api/admin/providers/:id/reject
+// @access  Private/Admin
+export const rejectProvider = asyncHandler(async (req, res) => {
+  const provider = await User.findById(req.params.id);
+  if (!provider) {
+    res.status(404);
+    throw new Error('Provider not found');
+  }
+  await provider.deleteOne();
+  res.json({ success: true, message: 'Provider application rejected' });
+});

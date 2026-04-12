@@ -6,7 +6,9 @@ import {
   ExclamationTriangleIcon, CheckCircleIcon, XCircleIcon,
   EyeIcon, EyeSlashIcon, ChevronDownIcon, ChevronUpIcon,
   MapPinIcon, PhoneIcon, LockClosedIcon, LockOpenIcon,
-  QuestionMarkCircleIcon, LightBulbIcon
+  QuestionMarkCircleIcon, LightBulbIcon,
+  AcademicCapIcon, WrenchScrewdriverIcon, IdentificationIcon,
+  LinkIcon, InformationCircleIcon, ClockIcon
 } from '@heroicons/react/24/outline';
 import api from '../api/axios';
 import Loader from '../components/common/Loader';
@@ -110,19 +112,28 @@ const INITIAL_FORM = {
 };
 
 const ProviderDashboard = () => {
-  const { user }     = useAuth();
-  const navigate     = useNavigate();
-  const [activeTab,  setActiveTab]  = useState('bookings');
-  const [bookings,   setBookings]   = useState([]);
-  const [services,   setServices]   = useState([]);
-  const [loading,    setLoading]    = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [showForm,   setShowForm]   = useState(false);
-  const [editSvc,    setEditSvc]    = useState(null);
-  const [deleteId,   setDeleteId]   = useState(null);
-  const [expandedId, setExpandedId] = useState(null);
-  const [bookFilter, setBookFilter] = useState('all');
+  const { user, login } = useAuth();
+  const navigate      = useNavigate();
+  const [activeTab,   setActiveTab]  = useState('bookings');
+  const [bookings,    setBookings]   = useState([]);
+  const [services,    setServices]   = useState([]);
+  const [loading,     setLoading]    = useState(true);
+  const [submitting,  setSubmitting] = useState(false);
+  const [showForm,    setShowForm]   = useState(false);
+  const [editSvc,     setEditSvc]    = useState(null);
+  const [deleteId,    setDeleteId]   = useState(null);
+  const [expandedId,  setExpandedId] = useState(null);
+  const [bookFilter,  setBookFilter] = useState('all');
   const [form, setForm] = useState(INITIAL_FORM);
+
+  // Verification Form State
+  const [verifForm, setVerifForm] = useState({
+    education:     user?.professionalInfo?.education || '',
+    skills:        user?.professionalInfo?.skills?.join(', ') || '',
+    currentStatus: user?.professionalInfo?.currentStatus || 'Freelancer',
+    portfolioUrl:  user?.professionalInfo?.portfolioUrl || '',
+    bio:           user?.professionalInfo?.bio || '',
+  });
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -133,6 +144,8 @@ const ProviderDashboard = () => {
       ]);
       setBookings(bRes.data.bookings);
       setServices(sRes.data.services);
+    } catch { 
+      /* silent */
     } finally {
       setLoading(false);
     }
@@ -148,8 +161,36 @@ const ProviderDashboard = () => {
     } catch { toast.error('Update failed'); }
   };
 
+  const handleVerifySubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const payload = {
+        professionalInfo: {
+          ...verifForm,
+          skills: verifForm.skills.split(',').map(s => s.trim()).filter(Boolean)
+        }
+      };
+      await api.put('/auth/profile', payload);
+      toast.success('Professional information submitted! Admin will verify soon.');
+      // Refresh user context
+      const meRes = await api.get('/auth/me');
+      // Note: We'd ideally have a way to update the global auth state here. 
+      // For now, reload window is simplest to ensure all state is consistent.
+      window.location.reload();
+    } catch {
+      toast.error('Submission failed');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleServiceSubmit = async (e) => {
     e.preventDefault();
+    if (!user?.isApproved) {
+      toast.error('You must be approved by an admin before listing services.');
+      return;
+    }
     setSubmitting(true);
     try {
       const payload = {
@@ -231,6 +272,39 @@ const ProviderDashboard = () => {
 
   return (
     <div className="page-container page-enter">
+      
+      {/* ── Status Banner (Verification) ── */}
+      {!user?.isApproved ? (
+        <div className="mb-8 card bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800 p-6 flex flex-col md:flex-row items-center gap-6">
+          <div className="w-16 h-16 rounded-2xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0 animate-pulse">
+            <ClockIcon className="w-8 h-8 text-amber-600" />
+          </div>
+          <div className="flex-1 text-center md:text-left">
+            <h2 className="text-xl font-bold text-amber-800 dark:text-amber-400">Approval Required</h2>
+            <p className="text-amber-700/70 dark:text-amber-400/70 text-sm mt-1">
+              To keep our platform professional, all providers must be verified. 
+              Please submit your professional details below. Admin will review within 24 hours.
+            </p>
+          </div>
+          <button 
+            onClick={() => setActiveTab('verify')}
+            className="px-6 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow-lg shadow-amber-600/20 transition whitespace-nowrap"
+          >
+            Complete Verification
+          </button>
+        </div>
+      ) : (
+        <div className="mb-6 card bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800 p-4 flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+            <ShieldCheckIcon className="w-5 h-5 text-emerald-600" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-emerald-800 dark:text-emerald-400">Verified Expert</p>
+            <p className="text-[11px] text-emerald-700/60 dark:text-emerald-400/60">Your profile is fully approved and visible.</p>
+          </div>
+        </div>
+      )}
+
       {/* Provider Tip Banner */}
       <div className="mb-6 card bg-primary-600 p-4 relative overflow-hidden group">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-500" />
@@ -265,8 +339,9 @@ const ProviderDashboard = () => {
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Welcome, {user?.name?.split(' ')[0]}! Manage your services & bookings.</p>
         </div>
         <button
+          disabled={!user?.isApproved}
           onClick={() => { setShowForm(true); setEditSvc(null); setForm(INITIAL_FORM); }}
-          className="btn-primary text-sm"
+          className={`btn-primary text-sm ${!user?.isApproved ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
         >
           <PlusIcon className="w-4 h-4" />
           Add Service
@@ -293,18 +368,25 @@ const ProviderDashboard = () => {
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6">
-        {['bookings', 'services'].map((t) => (
-          <button key={t} onClick={() => setActiveTab(t)}
-            className={`px-5 py-2.5 rounded-xl text-sm font-medium capitalize transition ${
-              activeTab === t
+        {[
+          { id: 'bookings', label: 'Bookings' },
+          { id: 'services', label: 'Services' },
+          { id: 'verify',   label: 'Verification' }
+        ].map((t) => (
+          <button key={t.id} onClick={() => setActiveTab(t.id)}
+            className={`px-5 py-2.5 rounded-xl text-sm font-medium transition ${
+              activeTab === t.id
                 ? 'bg-primary-600 text-white shadow-sm'
                 : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700'
             }`}>
-            {t}
-            {t === 'bookings' && pendingBookings > 0 && (
+            {t.label}
+            {t.id === 'bookings' && pendingBookings > 0 && (
               <span className="ml-2 inline-flex items-center justify-center w-5 h-5 bg-amber-500 text-white text-[10px] font-bold rounded-full">
                 {pendingBookings}
               </span>
+            )}
+            {t.id === 'verify' && !user?.isApproved && (
+              <span className="ml-2 inline-flex items-center justify-center w-2 h-2 bg-rose-500 rounded-full animate-bounce" />
             )}
           </button>
         ))}
@@ -397,13 +479,19 @@ const ProviderDashboard = () => {
             </div>
           )}
         </>
-      ) : (
+      ) : activeTab === 'services' ? (
         /* ── Services Tab ── */
         services.length === 0 ? (
           <div className="text-center py-20 card">
             <p className="text-5xl mb-4">🛠️</p>
             <p className="text-gray-500 mb-4">No services listed yet</p>
-            <button onClick={() => setShowForm(true)} className="btn-primary">Add your first service</button>
+            <button 
+              disabled={!user?.isApproved}
+              onClick={() => setShowForm(true)} 
+              className={`btn-primary ${!user?.isApproved ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}
+            >
+              Add your first service
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -459,6 +547,104 @@ const ProviderDashboard = () => {
             ))}
           </div>
         )
+      ) : (
+        /* ── Verification Tab (Onboarding) ── */
+        <div className="max-w-3xl mx-auto py-4">
+           <div className="flex items-center gap-3 mb-6">
+             <div className="w-12 h-12 rounded-2xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600">
+               <IdentificationIcon className="w-6 h-6" />
+             </div>
+             <div>
+               <h2 className="text-2xl font-black text-gray-900 dark:text-white">Professional Identity</h2>
+               <p className="text-sm text-gray-500">Provide required information for admin verification.</p>
+             </div>
+           </div>
+
+           <form onSubmit={handleVerifySubmit} className="space-y-6">
+             <div className="card p-8 space-y-6">
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                    <AcademicCapIcon className="w-4 h-4 text-primary-500" /> Education Qualification *
+                  </label>
+                  <input
+                    required
+                    type="text"
+                    placeholder="e.g. B.Tech Computer Science / Certified Digital Marketer"
+                    value={verifForm.education}
+                    onChange={(e) => setVerifForm({ ...verifForm, education: e.target.value })}
+                    className="input-field"
+                  />
+                  <p className="text-[10px] text-gray-400 mt-1.5 ml-1">Mention your degree or relevant certifications.</p>
+                </div>
+
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                    <WrenchScrewdriverIcon className="w-4 h-4 text-primary-500" /> Core Skills *
+                  </label>
+                  <input
+                    required
+                    type="text"
+                    placeholder="e.g. React.js, Python, UI Design, Content Writing"
+                    value={verifForm.skills}
+                    onChange={(e) => setVerifForm({ ...verifForm, skills: e.target.value })}
+                    className="input-field"
+                  />
+                  <p className="text-[10px] text-gray-400 mt-1.5 ml-1">Separate skills with commas.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   <div>
+                     <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                       <InformationCircleIcon className="w-4 h-4 text-primary-500" /> Current Status *
+                     </label>
+                     <select
+                       value={verifForm.currentStatus}
+                       onChange={(e) => setVerifForm({ ...verifForm, currentStatus: e.target.value })}
+                       className="input-field"
+                     >
+                        <option value="Student">Student</option>
+                        <option value="Freelancer">Full-time Freelancer</option>
+                        <option value="Unstop member">Unstop Member</option>
+                        <option value="Working Professional">Working Professional</option>
+                     </select>
+                   </div>
+                   <div>
+                     <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                       <LinkIcon className="w-4 h-4 text-primary-500" /> Portfolio / LinkedIn URL
+                     </label>
+                     <input
+                       type="url"
+                       placeholder="https://linkedin.com/in/yourprofile"
+                       value={verifForm.portfolioUrl}
+                       onChange={(e) => setVerifForm({ ...verifForm, portfolioUrl: e.target.value })}
+                       className="input-field"
+                     />
+                   </div>
+                </div>
+
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                    <PlusIcon className="w-4 h-4 text-primary-500" /> Professional Bio
+                  </label>
+                  <textarea
+                    rows={4}
+                    placeholder="Briefly describe your experience and what you offer to clients..."
+                    value={verifForm.bio}
+                    onChange={(e) => setVerifForm({ ...verifForm, bio: e.target.value })}
+                    className="input-field resize-none"
+                  />
+                </div>
+             </div>
+
+             <button 
+               type="submit" 
+               disabled={submitting}
+               className="btn-primary w-full justify-center py-4 text-base shadow-xl shadow-primary-600/20"
+             >
+               {submitting ? 'Submitting...' : 'Submit for Verification'}
+             </button>
+           </form>
+        </div>
       )}
 
       {/* ── Add/Edit Service Modal ── */}

@@ -15,7 +15,11 @@ import {
   ShieldCheck,
   Activity,
   ArrowDown,
-  ArrowUp
+  ArrowUp,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Eye
 } from 'lucide-react';
 import { 
   LineChart, Line, BarChart, Bar, 
@@ -34,13 +38,14 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const [providers, setProviders] = useState([]);
+  const [pendingProviders, setPendingProviders] = useState([]);
   const [earningsData, setEarningsData] = useState([]);
   const [statusData, setStatusData] = useState([]);
   const [categoryData, setCategoryData] = useState([]);
   const [topProviders, setTopProviders] = useState([]);
   const [recentBookings, setRecentBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview'); // overview, users, providers, analytics
+  const [activeTab, setActiveTab] = useState('overview'); // overview, approvals, users, providers, analytics
 
   useEffect(() => {
     fetchData();
@@ -49,11 +54,12 @@ const AdminDashboard = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [statsRes, usersRes, providersRes, earningsRes] = await Promise.all([
+      const [statsRes, usersRes, providersRes, earningsRes, pendingRes] = await Promise.all([
         api.get('/admin/stats'),
         api.get('/admin/users'),
         api.get('/admin/providers'),
-        api.get('/admin/earnings')
+        api.get('/admin/earnings'),
+        api.get('/admin/providers/pending')
       ]);
 
       const data = statsRes.data;
@@ -65,6 +71,7 @@ const AdminDashboard = () => {
       
       setUsers(usersRes.data.users || []);
       setProviders(providersRes.data.providers || []);
+      setPendingProviders(pendingRes.data.providers || []);
       setEarningsData(earningsRes.data.earningsByMonth || []);
     } catch (err) {
       console.error('Admin Fetch Error:', err);
@@ -74,11 +81,32 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleApprove = async (id) => {
+    try {
+      await api.put(`/admin/providers/${id}/approve`);
+      toast.success('Provider approved! they can now list services.');
+      fetchData();
+    } catch {
+      toast.error('Approval failed');
+    }
+  };
+
+  const handleReject = async (id) => {
+    if (!window.confirm('Are you sure you want to reject this application?')) return;
+    try {
+      await api.delete(`/admin/providers/${id}/reject`);
+      toast.success('Application rejected');
+      fetchData();
+    } catch {
+      toast.error('Rejection failed');
+    }
+  };
+
   const statCards = [
     { label: 'Total Users', value: stats?.users || 0, icon: UsersGroup, color: 'text-blue-600', bg: 'bg-blue-50', trend: '+12%', isUp: true },
     { label: 'Verified Providers', value: stats?.providers || 0, icon: ShieldCheck, color: 'text-purple-600', bg: 'bg-purple-50', trend: '+5%', isUp: true },
     { label: 'Net Revenue', value: formatPrice(stats?.earnings || 0), icon: IndianRupee, color: 'text-green-600', bg: 'bg-green-50', trend: '+24%', isUp: true },
-    { label: 'Active Projects', value: recentBookings.length, icon: Activity, color: 'text-amber-600', bg: 'bg-amber-50', trend: '-2%', isUp: false },
+    { label: 'Pending Approvals', value: pendingProviders.length, icon: Clock, color: 'text-rose-600', bg: 'bg-rose-50', trend: 'Priority', isUp: false },
   ];
 
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950"><Loader size="lg" /></div>;
@@ -120,7 +148,7 @@ const AdminDashboard = () => {
                     <Icon className="w-6 h-6" />
                   </div>
                   <div className={`flex items-center gap-1 text-[10px] font-black uppercase px-2 py-1 rounded-full ${card.isUp ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'}`}>
-                    {card.isUp ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+                    {card.isUp ? <ArrowUp className="w-3 h-3" /> : (card.trend === 'Priority' ? <Clock className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
                     {card.trend}
                   </div>
                 </div>
@@ -133,17 +161,23 @@ const AdminDashboard = () => {
 
         {/* Navigation Tabs */}
         <nav className="flex flex-wrap gap-2 mb-8 p-1.5 bg-gray-200/40 dark:bg-gray-800/40 rounded-3xl w-fit">
-          {['overview', 'users', 'providers', 'analytics'].map((tab) => (
+          {[
+            { id: 'overview', label: 'Overview' },
+            { id: 'approvals', label: `Pending Approvals (${pendingProviders.length})` },
+            { id: 'users', label: 'Users' },
+            { id: 'providers', label: 'Providers' },
+            { id: 'analytics', label: 'Analytics' }
+          ].map((tab) => (
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-8 py-3 rounded-2xl text-sm font-black capitalize transition-all duration-300 ${
-                activeTab === tab 
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-8 py-3 rounded-2xl text-sm font-black transition-all duration-300 ${
+                activeTab === tab.id 
                   ? 'bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-xl scale-105' 
                   : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
               }`}
             >
-              {tab}
+              {tab.label}
             </button>
           ))}
         </nav>
@@ -171,7 +205,7 @@ const AdminDashboard = () => {
                       <select 
                         id="year-selector"
                         name="year-selector"
-                        className="bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm font-bold px-4 py-2"
+                        className="bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm font-bold px-4 py-2 text-gray-900 dark:text-white"
                       >
                         <option>2024 (Current)</option>
                         <option>2023</option>
@@ -361,15 +395,85 @@ const AdminDashboard = () => {
                              </td>
                            </tr>
                          ))}
-                         {recentBookings.length === 0 && (
-                           <tr>
-                             <td colSpan="5" className="px-10 py-10 text-center text-gray-400 text-sm">No recent activity detected</td>
-                           </tr>
-                         )}
                        </tbody>
                      </table>
                    </div>
                 </div>
+              </div>
+            )}
+
+            {activeTab === 'approvals' && (
+              <div className="space-y-6">
+                <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] p-10 border border-gray-100 dark:border-gray-800 mb-8">
+                   <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-2">Registration Queue</h2>
+                   <p className="text-gray-500">Verify and approve new providers to maintain ecosystem quality.</p>
+                </div>
+
+                {pendingProviders.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-32 bg-white dark:bg-gray-900 rounded-[2.5rem] border border-gray-100 dark:border-gray-800">
+                    <CheckCircle className="w-16 h-16 text-green-500 mb-4" />
+                    <h3 className="text-xl font-bold text-gray-800 dark:text-white">Queue is Empty</h3>
+                    <p className="text-gray-400">All provider applications have been processed.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {pendingProviders.map((prov) => (
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        key={prov._id} 
+                        className="bg-white dark:bg-gray-900 rounded-[2.5rem] p-8 border border-gray-100 dark:border-gray-800 flex flex-col justify-between"
+                      >
+                        <div>
+                          <div className="flex items-center gap-4 mb-6">
+                            <div className="w-14 h-14 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl font-black">
+                              {prov.name[0]}
+                            </div>
+                            <div>
+                              <h3 className="text-lg font-black text-gray-900 dark:text-white">{prov.name}</h3>
+                              <p className="text-sm text-gray-400 font-medium">{prov.email}</p>
+                            </div>
+                          </div>
+
+                          <div className="space-y-4 mb-8">
+                             <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl">
+                               <p className="text-[10px] font-black uppercase text-gray-400 mb-1 tracking-widest">Education & Status</p>
+                               <p className="text-xs font-bold text-gray-700 dark:text-gray-200">{prov.professionalInfo?.education || 'Not provided'} • {prov.professionalInfo?.currentStatus || 'Self-Employed'}</p>
+                             </div>
+                             <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl">
+                               <p className="text-[10px] font-black uppercase text-gray-400 mb-1 tracking-widest">Skills & Expertise</p>
+                               <div className="flex flex-wrap gap-1 mt-1">
+                                 {prov.professionalInfo?.skills?.length > 0 ? prov.professionalInfo.skills.map(s => (
+                                   <span key={s} className="px-2 py-1 bg-white dark:bg-gray-700 text-[9px] font-black rounded-lg border border-gray-100 dark:border-gray-600 uppercase text-primary-600">{s}</span>
+                                 )) : <span className="text-xs text-gray-400 italic">No skills listed</span>}
+                               </div>
+                             </div>
+                             {prov.professionalInfo?.portfolioUrl && (
+                               <a href={prov.professionalInfo.portfolioUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-primary-600 text-xs font-bold hover:underline">
+                                 <Eye className="w-4 h-4" /> View Portfolio / Resume
+                               </a>
+                             )}
+                          </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                          <button 
+                            onClick={() => handleApprove(prov._id)}
+                            className="flex-1 py-3 bg-primary-600 hover:bg-primary-700 text-white font-black rounded-2xl text-xs uppercase tracking-widest transition shadow-lg shadow-primary-600/20"
+                          >
+                            Approve
+                          </button>
+                          <button 
+                            onClick={() => handleReject(prov._id)}
+                            className="flex-1 py-3 bg-rose-50 hover:bg-rose-100 text-rose-600 font-black rounded-2xl text-xs uppercase tracking-widest transition border border-rose-100"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -422,7 +526,7 @@ const AdminDashboard = () => {
                           </td>
                           <td className="px-10 py-6 text-xs text-gray-400 font-medium">{formatDate(user.createdAt)}</td>
                           <td className="px-10 py-6 text-right">
-                             <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition text-gray-400">
+                             <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition text-gray-400">
                                <MoreVertical className="w-4 h-4" />
                              </button>
                           </td>
@@ -476,9 +580,9 @@ const AdminDashboard = () => {
                             </div>
                           </td>
                           <td className="px-10 py-6">
-                            <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-green-600 bg-green-50 px-3 py-1 rounded-full w-fit">
-                              <ShieldCheck className="w-3 h-3" />
-                              Active
+                            <span className={`flex items-center gap-1 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full w-fit ${prov.isApproved ? 'text-green-600 bg-green-50' : 'text-amber-600 bg-amber-50'}`}>
+                              {prov.isApproved ? <ShieldCheck className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
+                              {prov.isApproved ? 'Approved' : 'Pending'}
                             </span>
                           </td>
                           <td className="px-10 py-6 text-right">

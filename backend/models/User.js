@@ -26,6 +26,21 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'provider', 'admin'],
     default: 'user',
   },
+  // Professional Details (For Providers)
+  professionalInfo: {
+    education:     { type: String, default: '' },
+    skills:        [{ type: String }],
+    experience:    { type: String, default: '' },
+    currentStatus: { type: String, default: '' }, // e.g., 'Student', 'Freelancer', 'Unstop Member'
+    bio:           { type: String, default: '' },
+    portfolioUrl:  { type: String, default: '' },
+  },
+  isApproved: { 
+    type: Boolean, 
+    default: function() {
+      return this.role !== 'provider'; // Auto-approve users/admins, providers need manual approval
+    }
+  },
   phone: {
     type: String,
     trim: true,

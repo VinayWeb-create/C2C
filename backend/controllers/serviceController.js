@@ -93,6 +93,12 @@ export const getServiceById = asyncHandler(async (req, res) => {
 // @route   POST /api/services
 // @access  Private/Provider
 export const createService = asyncHandler(async (req, res) => {
+  // Verification check: Only approved providers can list services
+  if (!req.user.isApproved && req.user.role === 'provider') {
+    res.status(403);
+    throw new Error('Your account is pending admin approval. You cannot list services yet.');
+  }
+
   req.body.provider = req.user._id;
 
   // Auto-geocode

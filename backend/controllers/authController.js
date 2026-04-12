@@ -56,11 +56,11 @@ export const getMe = asyncHandler(async (req, res) => {
 // @route   PUT /api/auth/profile
 // @access  Private
 export const updateProfile = asyncHandler(async (req, res) => {
-  const { name, phone, location, avatar } = req.body;
+  const { name, phone, location, avatar, professionalInfo } = req.body;
 
   const user = await User.findByIdAndUpdate(
     req.user._id,
-    { name, phone, location, avatar },
+    { name, phone, location, avatar, professionalInfo },
     { new: true, runValidators: true }
   );
 
