@@ -12,6 +12,7 @@ import HomePage          from './pages/HomePage';
 import LoginPage         from './pages/LoginPage';
 import RegisterPage      from './pages/RegisterPage';
 import ServicesPage      from './pages/ServicesPage';
+import ProjectsPage      from './pages/ProjectsPage';
 import ServiceDetailPage from './pages/ServiceDetailPage';
 import BookingPage       from './pages/BookingPage';
 import UserDashboard     from './pages/UserDashboard';
@@ -42,10 +43,11 @@ const App = () => {
               {/* Public */}
               <Route path="/"         element={<HomePage />} />
                <Route path="/login"    element={<LoginPage />} />
-               <Route path="/register" element={<RegisterPage />} />
-               <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/services" element={<ServicesPage />} />
-              <Route path="/services/:id" element={<ServiceDetailPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/services" element={<ProjectsPage />} />
+                <Route path="/projects" element={<ProjectsPage />} />
+                <Route path="/services/:id" element={<ServiceDetailPage />} />
               <Route path="/support" element={<SupportPage />} />
               <Route path="/learning" element={<LearningPage />} />
 
