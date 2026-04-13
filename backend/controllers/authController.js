@@ -116,6 +116,7 @@ export const logout = asyncHandler(async (req, res) => {
 // @route   POST /api/auth/forgot-password
 // @access  Public
 export const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
   try {
     const emailLower = email.toLowerCase();
     const user = await User.findOne({ email: emailLower });
