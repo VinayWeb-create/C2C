@@ -21,6 +21,9 @@ connectDB();
 
 const app = express();
 
+// Trust proxy for Render/Vercel (important for Rate Limiting)
+app.set('trust proxy', 1);
+
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({
   origin: [

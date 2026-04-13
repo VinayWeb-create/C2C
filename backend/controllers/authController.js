@@ -153,12 +153,20 @@ export const forgotPassword = asyncHandler(async (req, res) => {
       </div>
     `;
 
-    await sendEmail({
-      email: user.email,
-      subject: 'Password Reset OTP - Smart Local Life',
-      message: `Your password reset OTP is ${otp}`,
-      html
-    });
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: 'Password Reset OTP - Smart Local Life',
+        message: `Your password reset OTP is ${otp}`,
+        html
+      });
+    } catch (emailErr) {
+      console.error('Email Dispatch Error:', emailErr);
+      // We still return success: true but inform them via message if possible? 
+      // Better to throw a specific error so they know it failed.
+      res.status(500);
+      throw new Error(`Email could not be sent: ${emailErr.message}`);
+    }
     
     res.json({ success: true, message: 'OTP sent to your registered email.' });
   } catch (err) {

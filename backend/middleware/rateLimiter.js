@@ -10,8 +10,8 @@ export const apiLimiter = rateLimit({
 
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: { success: false, message: 'Too many login attempts, please try again after 15 minutes.' },
+  max: 50,
+  message: { success: false, message: 'Too many attempts, please try again after 15 minutes.' },
 });
 
 export const aiLimiter = rateLimit({
