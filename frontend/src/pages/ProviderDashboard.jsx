@@ -219,18 +219,40 @@ const ProviderDashboard = () => {
                                </div>
                              </div>
                              <h3 className="text-lg font-black text-gray-900 dark:text-white group-hover:text-primary-600 transition-colors">{project.title}</h3>
-                             <p className="text-sm text-gray-500 mt-2 line-clamp-2">{project.description}</p>
-                             
-                             <div className="flex flex-wrap gap-2 mt-6">
-                                {(project.skillsRequired || []).map(skill => (
-                                  <span key={skill} className="px-3 py-1 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl text-[9px] font-black uppercase text-gray-500">{skill}</span>
-                                ))}
-                             </div>
+                             <p className="text-sm text-gray-500 mt-2 line-clamp-3 leading-relaxed">{project.description}</p>
+                              
+                             <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {project.roles?.length > 0 && (
+                                  <div>
+                                    <p className="text-[10px] font-black uppercase text-gray-400 mb-2 tracking-widest">Available Roles</p>
+                                    <div className="flex flex-wrap gap-2">
+                                      {project.roles.map(r => (
+                                        <span key={r} className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg text-[9px] font-black uppercase tracking-tight italic">{r}</span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                <div>
+                                  <p className="text-[10px] font-black uppercase text-gray-400 mb-2 tracking-widest">Technical Stack</p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {(project.skillsRequired || []).map(skill => (
+                                      <span key={skill} className="px-2.5 py-1 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-lg text-[9px] font-black uppercase text-gray-500">{skill}</span>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {project.requirements && (
+                                <div className="mt-6 p-4 bg-gray-50/50 dark:bg-gray-800/20 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
+                                   <p className="text-[9px] font-black uppercase text-primary-600 mb-1">Deliverables & Specs</p>
+                                   <p className="text-xs text-gray-400 italic line-clamp-2">{project.requirements}</p>
+                                </div>
+                              )}
 
                              <div className="mt-8 pt-8 border-t border-gray-50 dark:border-gray-800 flex items-center justify-between">
-                                <div className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-400">
-                                   <ClockIcon className="w-4 h-4" /> 2 days left
-                                </div>
+                                 <div className="flex items-center gap-2 text-[10px] font-black uppercase text-primary-600 italic">
+                                    <ClockIcon className="w-4 h-4" /> {project.timeline || 'TBA'}
+                                 </div>
                                 {hasApplied ? (
                                    <span className="px-6 py-2 bg-emerald-100 text-emerald-700 rounded-xl text-xs font-black uppercase">Applied</span>
                                 ) : (
@@ -402,9 +424,28 @@ const ProviderDashboard = () => {
               <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-2">Apply for Project</h2>
               <p className="text-sm text-gray-500 mb-8">Tell the admin why you're the best fit for this merit-based assignment.</p>
               
-              <div className="flex items-center gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-2xl border border-amber-100 mb-8">
-                 <TrophyIcon className="w-6 h-6 text-amber-600" />
-                 <p className="text-xs text-amber-800 font-bold">Your {(user?.badges || []).length} Merit Badges will be highlighted.</p>
+              <div className="flex items-center gap-3 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl border border-indigo-100 dark:border-indigo-800 mb-8">
+                 <BriefcaseIcon className="w-6 h-6 text-indigo-600" />
+                 <div>
+                    <p className="text-[10px] font-black uppercase text-indigo-800 dark:text-indigo-400">Match Your Role</p>
+                    <p className="text-[10px] text-indigo-600">Select the area where you excel most.</p>
+                 </div>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-3">Which role are you applying for?</label>
+                <div className="flex flex-wrap gap-2">
+                  {(marketplace.find(p => p._id === applyModal)?.roles || []).map(role => (
+                    <button 
+                      key={role} 
+                      type="button"
+                      onClick={() => setApplyNotes(prev => prev.includes(`[Role: ${role}]`) ? prev : `[Role: ${role}] ${prev}`)}
+                      className="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-xl text-[10px] font-black uppercase hover:bg-primary-500 hover:text-white transition"
+                    >
+                      {role}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <form onSubmit={handleApply} className="space-y-6">

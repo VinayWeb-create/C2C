@@ -54,7 +54,8 @@ const AdminDashboard = () => {
   // Project Form State
   const [showProjectForm, setShowProjectForm] = useState(false);
   const [projectForm, setProjectForm] = useState({
-    title: '', description: '', budget: '', category: CATEGORIES[0], skillsRequired: ''
+    title: '', description: '', budget: '', category: CATEGORIES[0], 
+    skillsRequired: '', roles: '', requirements: '', timeline: ''
   });
 
   useEffect(() => {
@@ -98,12 +99,16 @@ const AdminDashboard = () => {
       const payload = {
         ...projectForm,
         budget: parseFloat(projectForm.budget),
-        skillsRequired: projectForm.skillsRequired.split(',').map(s => s.trim())
+        skillsRequired: projectForm.skillsRequired.split(',').map(s => s.trim()).filter(Boolean),
+        roles: projectForm.roles.split(',').map(r => r.trim()).filter(Boolean)
       };
       await api.post('/projects', payload);
       toast.success('Corporate project posted successfully! 🚀');
       setShowProjectForm(false);
-      setProjectForm({ title: '', description: '', budget: '', category: CATEGORIES[0], skillsRequired: '' });
+      setProjectForm({ 
+        title: '', description: '', budget: '', category: CATEGORIES[0], 
+        skillsRequired: '', roles: '', requirements: '', timeline: '' 
+      });
       fetchData();
     } catch {
       toast.error('Failed to post project');
@@ -305,11 +310,42 @@ const AdminDashboard = () => {
                                <h3 className="text-xl font-black text-gray-900 dark:text-white">{project.title}</h3>
                                <p className="text-sm text-gray-500 mt-1">{project.description}</p>
                             </div>
-                            <div className="text-right">
-                               <p className="text-2xl font-black text-gray-900 dark:text-white">{formatPrice(project.budget)}</p>
-                               <p className="text-[10px] font-black uppercase text-gray-400 mt-1">Status: {project.status}</p>
+                             <div className="text-right">
+                                <p className="text-2xl font-black text-gray-900 dark:text-white">{formatPrice(project.budget)}</p>
+                                <p className="text-[10px] font-black uppercase text-gray-400 mt-1">Status: {project.status}</p>
+                                {project.timeline && <p className="text-[10px] font-bold text-primary-600 mt-1 uppercase tracking-widest italic">{project.timeline}</p>}
+                             </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            {project.roles?.length > 0 && (
+                              <div>
+                                <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Available Roles</h4>
+                                <div className="flex flex-wrap gap-2">
+                                  {project.roles.map(role => (
+                                    <span key={role} className="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-lg text-[9px] font-bold uppercase">{role}</span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {project.skillsRequired?.length > 0 && (
+                              <div>
+                                <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Technical Skills</h4>
+                                <div className="flex flex-wrap gap-2">
+                                  {project.skillsRequired.map(skill => (
+                                    <span key={skill} className="px-3 py-1 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-lg text-[9px] font-bold uppercase">{skill}</span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {project.requirements && (
+                            <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800/40 rounded-2xl border border-gray-100 dark:border-gray-800">
+                               <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Specific Requirements</h4>
+                               <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">{project.requirements}</p>
                             </div>
-                         </div>
+                          )}
 
                          {project.status === 'open' && (
                            <div className="mt-8 pt-8 border-t border-gray-50 dark:border-gray-800">
@@ -508,9 +544,29 @@ const AdminDashboard = () => {
                     <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Detailed Description</label>
                     <textarea required rows={4} placeholder="Describe the scope, deliverables, and timeline..." value={projectForm.description} onChange={e => setProjectForm({...projectForm, description: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-2xl py-4 px-6 text-sm font-bold text-gray-900 dark:text-white resize-none"/>
                  </div>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Freelancing Roles (e.g. Frontend, API Dev)</label>
+                        <input required type="text" placeholder="Frontend, Backend, UI/UX" value={projectForm.roles} onChange={e => setProjectForm({...projectForm, roles: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-2xl py-4 px-6 text-sm font-bold text-gray-900 dark:text-white"/>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Technical Skills (Comma separated)</label>
+                        <input required type="text" placeholder="React, Node.js, TailWind" value={projectForm.skillsRequired} onChange={e => setProjectForm({...projectForm, skillsRequired: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-2xl py-4 px-6 text-sm font-bold text-gray-900 dark:text-white"/>
+                    </div>
+                 </div>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Timeline / Duration</label>
+                        <input type="text" placeholder="e.g. 2 Months, 15 Days" value={projectForm.timeline} onChange={e => setProjectForm({...projectForm, timeline: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-2xl py-4 px-6 text-sm font-bold text-gray-900 dark:text-white"/>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Registration Deadline (Optional)</label>
+                        <input type="date" value={projectForm.deadline} onChange={e => setProjectForm({...projectForm, deadline: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-2xl py-4 px-6 text-sm font-bold text-gray-900 dark:text-white"/>
+                    </div>
+                 </div>
                  <div>
-                    <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Required Skills (Comma separated)</label>
-                    <input required type="text" placeholder="React, Node.js, TailWind" value={projectForm.skillsRequired} onChange={e => setProjectForm({...projectForm, skillsRequired: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-2xl py-4 px-6 text-sm font-bold text-gray-900 dark:text-white"/>
+                    <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Deliverables & Requirements</label>
+                    <textarea rows={3} placeholder="List out specific expectations..." value={projectForm.requirements} onChange={e => setProjectForm({...projectForm, requirements: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-2xl py-4 px-6 text-sm font-bold text-gray-900 dark:text-white resize-none"/>
                  </div>
                  <button type="submit" className="w-full py-5 bg-primary-600 text-white font-black rounded-3xl text-sm uppercase tracking-widest shadow-xl shadow-primary-600/30 hover:scale-[1.02] transition">Authorize & Post Contract</button>
               </form>

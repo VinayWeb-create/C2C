@@ -17,6 +17,15 @@ const projectSchema = new mongoose.Schema({
   skillsRequired: [{
     type: String
   }],
+  roles: [{
+    type: String
+  }],
+  requirements: {
+    type: String
+  },
+  timeline: {
+    type: String
+  },
   category: {
     type: String,
     required: [true, 'Please add a category']
