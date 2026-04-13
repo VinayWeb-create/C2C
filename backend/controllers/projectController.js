@@ -82,12 +82,17 @@ export const assignProject = asyncHandler(async (req, res) => {
         throw new Error('Project not found');
     }
 
+    if (!providerId) {
+        res.status(400);
+        throw new Error('Please provide a provider ID');
+    }
+
     project.status = 'assigned';
     project.assignedTo = providerId;
     
     // Update application status
     project.applications.forEach(app => {
-        if (app.provider.toString() === providerId.toString()) {
+        if (app.provider && providerId && app.provider.toString() === providerId.toString()) {
             app.status = 'accepted';
         } else {
             app.status = 'rejected';

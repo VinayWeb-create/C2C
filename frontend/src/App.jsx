@@ -1,4 +1,4 @@
-import { Routes, Route, Link } from 'react-router-dom';
+import { Routes, Route, Link, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import ProtectedRoute    from './components/common/ProtectedRoute';
 import Navbar   from './components/common/Navbar';
@@ -83,6 +83,8 @@ const App = () => {
                   <AdminDashboard />
                 </ProtectedRoute>
               } />
+
+              <Route path="/admin" element={<Navigate to="/dashboard/admin" replace />} />
 
               {/* 404 */}
               <Route path="*" element={

@@ -115,7 +115,7 @@ const AdminDashboard = () => {
     }
   };
 
-  const handeAssign = async (projectId, providerId) => {
+  const handleAssign = async (projectId, providerId) => {
     try {
       await api.put(`/projects/${projectId}/assign`, { providerId });
       toast.success('Project assigned! Communication channel opened.');
@@ -246,8 +246,8 @@ const AdminDashboard = () => {
                         <p className="text-sm text-gray-400">Monthly profit analysis.</p>
                       </div>
                     </div>
-                    <div className="h-[350px]">
-                      <ResponsiveContainer width="100%" height="100%">
+                    <div className="h-[350px] w-full min-h-[350px]">
+                      <ResponsiveContainer width="100%" height="100%" minHeight={350}>
                         <AreaChart data={earningsData}>
                           <defs>
                             <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
@@ -359,7 +359,7 @@ const AdminDashboard = () => {
                                       </div>
                                       <p className="text-[10px] text-gray-500 mb-4 line-clamp-2">Notes: {app.notes || 'No message'}</p>
                                       <button 
-                                        onClick={() => handeAssign(project._id, app.provider?._id)}
+                                        onClick={() => handleAssign(project._id, app.provider?._id)}
                                         className="w-full py-2 bg-primary-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest"
                                       >
                                         Assign Project
