@@ -247,7 +247,7 @@ const AdminDashboard = () => {
                       </div>
                     </div>
                     <div className="w-full">
-                      <ResponsiveContainer width="100%" aspect={2.5}>
+                      <ResponsiveContainer width="100%" height={350}>
                         <AreaChart data={earningsData}>
                           <defs>
                             <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
@@ -359,7 +359,7 @@ const AdminDashboard = () => {
                                       </div>
                                       <p className="text-[10px] text-gray-500 mb-4 line-clamp-2">Notes: {app.notes || 'No message'}</p>
                                       <button 
-                                        onClick={() => handleAssign(project._id, app.provider?._id)}
+                                        onClick={() => handleAssign(project._id, app.provider?._id || app.provider)}
                                         className="w-full py-2 bg-primary-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest"
                                       >
                                         Assign Project

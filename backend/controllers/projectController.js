@@ -85,20 +85,30 @@ export const assignProject = asyncHandler(async (req, res) => {
 
     if (!providerId) {
         res.status(400);
-        throw new Error('Please provide a provider ID');
+        throw new Error('Missing providerId in request body');
     }
 
     project.status = 'assigned';
     project.assignedTo = providerId;
     
     // Update application status
+    let found = false;
     project.applications.forEach(app => {
-        if (app.provider && providerId && app.provider.toString() === providerId.toString()) {
+        const appProviderId = app.provider?.toString();
+        const targetId = providerId.toString();
+
+        if (appProviderId === targetId) {
             app.status = 'accepted';
+            found = true;
         } else {
             app.status = 'rejected';
         }
     });
+
+    if (!found) {
+        res.status(404);
+        throw new Error('Applicant not found in this project');
+    }
 
     await project.save();
     res.json({ success: true, message: 'Project assigned successfully', project });
