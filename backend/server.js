@@ -23,25 +23,29 @@ const app = express();
 
 app.use(helmet());
 const allowedOrigins = [
-  (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, ''),
+  'http://localhost:5173',
   'https://c2-c-sable.vercel.app',
-  'https://c2-5ltonl5v1-vinay-avalas-projects.vercel.app'
 ];
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl)
+    // allow requests with no origin 
     if (!origin) return callback(null, true);
     
-    const isAllowed = allowedOrigins.includes(origin) || origin.endsWith('.vercel.app');
+    const isVercel = origin.endsWith('.vercel.app');
+    const isLocal = origin.startsWith('http://localhost:');
+    const isOriginal = allowedOrigins.includes(origin);
     
-    if (isAllowed) {
+    if (isVercel || isLocal || isOriginal) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      console.log('CORS Blocked for origin:', origin);
+      callback(null, false); // Don't throw error, just don't allow
     }
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
