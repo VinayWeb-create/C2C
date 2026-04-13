@@ -117,6 +117,12 @@ export const logout = asyncHandler(async (req, res) => {
 // @access  Public
 export const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
+  
+  if (!email) {
+    res.status(400);
+    throw new Error('Please provide an email address');
+  }
+
   try {
     const emailLower = email.toLowerCase();
     const user = await User.findOne({ email: emailLower });
