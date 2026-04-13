@@ -16,7 +16,8 @@ export const createProject = asyncHandler(async (req, res) => {
 // @access  Private
 export const getProjects = asyncHandler(async (req, res) => {
     const projects = await Project.find({ status: 'open' })
-        .populate('postedBy', 'name email');
+        .populate('postedBy', 'name email')
+        .populate('applications.provider', 'name email badges');
     res.json({ success: true, projects });
 });
 

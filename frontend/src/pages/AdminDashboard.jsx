@@ -246,8 +246,8 @@ const AdminDashboard = () => {
                         <p className="text-sm text-gray-400">Monthly profit analysis.</p>
                       </div>
                     </div>
-                    <div className="h-[350px] w-full min-h-[350px]">
-                      <ResponsiveContainer width="100%" height="100%" minHeight={350}>
+                    <div className="w-full">
+                      <ResponsiveContainer width="100%" aspect={2.5}>
                         <AreaChart data={earningsData}>
                           <defs>
                             <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
