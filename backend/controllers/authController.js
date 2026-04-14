@@ -100,6 +100,29 @@ export const updateProfile = asyncHandler(async (req, res) => {
 // @desc    Add badge to user (Earned via learning)
 // @route   PUT /api/auth/add-badge
 // @access  Private
+export const setActiveDomain = asyncHandler(async (req, res) => {
+  const { domain } = req.body;
+  const user = await User.findById(req.user._id);
+
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  // If already has an active domain and not completed, don't allow change
+  const hasBadge = user.badges?.some(b => b.role === user.activeLearningDomain);
+  
+  if (user.activeLearningDomain && !hasBadge && user.activeLearningDomain !== domain) {
+    res.status(400);
+    throw new Error(`You must complete your current specialization (${user.activeLearningDomain}) before switching.`);
+  }
+
+  user.activeLearningDomain = domain;
+  await user.save();
+
+  res.json({ success: true, user });
+});
+
 export const addBadge = asyncHandler(async (req, res) => {
   const { name, role, testResult } = req.body;
   const user = await User.findById(req.user._id);

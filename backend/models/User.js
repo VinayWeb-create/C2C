@@ -80,6 +80,7 @@ const userSchema = new mongoose.Schema({
   resetPasswordOTPExpire: { type: Date, select: false },
   portfolioSubmittedAt: { type: Date },
   isProfileComplete: { type: Boolean, default: false },
+  activeLearningDomain: { type: String, default: null },
   testResults: [{
     category: String,
     examScore: Number,      // Out of 50

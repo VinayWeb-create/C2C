@@ -25,10 +25,10 @@ import api from '../api/axios';
 import toast from 'react-hot-toast';
 
 const LearningPage = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const navigate = useNavigate();
-  const [domainSelected, setDomainSelected] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [domainSelected, setDomainSelected] = useState(!!user?.activeLearningDomain);
+  const [selectedCategory, setSelectedCategory] = useState(user?.activeLearningDomain || null);
   const [activeTab, setActiveTab] = useState('roadmap'); 
   
   // Test State
@@ -42,10 +42,17 @@ const LearningPage = () => {
 
   const data = selectedCategory ? (LEARNING_DATA[selectedCategory] || { roadmap: [], youtube: [], notes: [], test: [], projects: [] }) : null;
 
-  const handleDomainChoice = (category) => {
-    setSelectedCategory(category);
-    setDomainSelected(true);
-    setActiveTab('roadmap');
+  const handleDomainChoice = async (category) => {
+    try {
+      const { data: res } = await api.put('/auth/set-active-domain', { domain: category });
+      updateUser(res.user);
+      setSelectedCategory(category);
+      setDomainSelected(true);
+      setActiveTab('roadmap');
+      toast.success(`You have committed to the ${category} Career Path! 🚀`);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to select domain');
+    }
   };
 
   const handleOptionSelect = (questionId, option) => {
@@ -177,13 +184,24 @@ const LearningPage = () => {
         <aside className="w-full md:w-64 flex-shrink-0">
           <div className="sticky top-24">
             <button 
-              onClick={() => setDomainSelected(false)}
-              className="w-full flex items-center justify-between px-5 py-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 text-sm font-bold text-gray-500 mb-8 hover:text-primary-600 transition-colors"
+              onClick={() => {
+                if (hasBadge) {
+                  setDomainSelected(false);
+                } else {
+                  toast.error(`Finish your ${selectedCategory} certification to unlock other paths!`, {
+                    icon: '🔒',
+                    style: { borderRadius: '10px', background: '#333', color: '#fff' }
+                  });
+                }
+              }}
+              className={`w-full flex items-center justify-between px-5 py-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 text-sm font-bold transition-colors ${
+                hasBadge ? 'text-primary-600 hover:bg-primary-50' : 'text-gray-400 cursor-not-allowed opacity-60'
+              }`}
             >
-              <span>Switch Domain</span>
-              <BookOpenIcon className="w-5 h-5" />
+              <span>{hasBadge ? 'Switch Domain' : 'Domain Locked'}</span>
+              {hasBadge ? <BookOpenIcon className="w-5 h-5" /> : <LockClosedIcon className="w-5 h-5 text-rose-500" />}
             </button>
-            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4 px-4 font-black">Curriculum</h2>
+            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mt-8 mb-4 px-4 font-black">Curriculum</h2>
             <div className="space-y-1">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
