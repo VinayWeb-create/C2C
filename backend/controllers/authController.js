@@ -73,10 +73,13 @@ export const updateProfile = asyncHandler(async (req, res) => {
 
   // Update nested professional info
   if (professionalInfo) {
-    user.professionalInfo = {
-      ...user.professionalInfo.toObject(),
-      ...professionalInfo
-    };
+    // Ensure nested object exists
+    if (!user.professionalInfo) user.professionalInfo = {};
+    
+    // Safely update each key passed in professionalInfo
+    Object.keys(professionalInfo).forEach(key => {
+      user.professionalInfo[key] = professionalInfo[key];
+    });
     
     // Mark portfolio as submitted if substantial info provided
     if (professionalInfo.portfolioUrl || (professionalInfo.skills && professionalInfo.skills.length > 0)) {
@@ -86,11 +89,15 @@ export const updateProfile = asyncHandler(async (req, res) => {
 
   try {
     const updatedUser = await user.save();
+    console.log(`User ${user._id} profile updated successfully.`);
     res.json({ success: true, user: updatedUser });
   } catch (err) {
-    console.error('Profile Save Error:', err);
-    res.status(400);
-    throw new Error(err.message || 'Validation failed for profile update');
+    console.error('CRITICAL Profile Save Error:', err);
+    res.status(400).json({ 
+      success: false, 
+      message: err.message || 'Validation failed for profile update',
+      errors: err.errors // Include detailed mongoose validation errors
+    });
   }
 });
 
