@@ -35,6 +35,7 @@ const ProfileSetupPage = () => {
           education: formData.education,
           resumeUrl: formData.resumeLink,
           portfolioUrl: formData.github,
+          githubUrl: formData.github,
           linkedInUrl: formData.linkedin,
           bio: formData.bio,
           skills: []

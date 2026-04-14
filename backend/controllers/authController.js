@@ -64,40 +64,36 @@ export const updateProfile = asyncHandler(async (req, res) => {
     throw new Error('User not found');
   }
 
-  // Update top-level fields
-  if (name) user.name = name;
-  if (phone) user.phone = phone;
-  if (location) user.location = location;
-  if (avatar) user.avatar = avatar;
-  if (isProfileComplete !== undefined) user.isProfileComplete = isProfileComplete;
+  // Update top-level fields safely
+  if (name) user.set('name', name);
+  if (phone) user.set('phone', phone);
+  if (location) user.set('location', location);
+  if (avatar) user.set('avatar', avatar);
+  if (isProfileComplete !== undefined) user.set('isProfileComplete', isProfileComplete);
 
-  // Update nested professional info
+  // Update nested professional info safely
   if (professionalInfo) {
-    // Ensure nested object exists
-    if (!user.professionalInfo) user.professionalInfo = {};
-    
-    // Safely update each key passed in professionalInfo
     Object.keys(professionalInfo).forEach(key => {
-      user.professionalInfo[key] = professionalInfo[key];
+      // Mapping field names if they differ slightly
+      const value = professionalInfo[key];
+      user.set(`professionalInfo.${key}`, value);
     });
     
     // Mark portfolio as submitted if substantial info provided
     if (professionalInfo.portfolioUrl || (professionalInfo.skills && professionalInfo.skills.length > 0)) {
-      user.portfolioSubmittedAt = Date.now();
+      user.set('portfolioSubmittedAt', Date.now());
     }
   }
 
   try {
     const updatedUser = await user.save();
-    console.log(`User ${user._id} profile updated successfully.`);
+    console.log(`Backend: User profile updated successfully: ${user.email}`);
     res.json({ success: true, user: updatedUser });
   } catch (err) {
-    console.error('CRITICAL Profile Save Error:', err);
-    res.status(400).json({ 
-      success: false, 
-      message: err.message || 'Validation failed for profile update',
-      errors: err.errors // Include detailed mongoose validation errors
-    });
+    console.error('Backend: Profile Update CRITICAL Error:', err);
+    // Let the global errorHandler handle formatting, but send an informative 400
+    res.status(400);
+    throw new Error(err.message || 'Profile update failed validation');
   }
 });
 
