@@ -58,9 +58,16 @@ export const getMe = asyncHandler(async (req, res) => {
 export const updateProfile = asyncHandler(async (req, res) => {
   const { name, phone, location, avatar, professionalInfo } = req.body;
 
+  const updateData = { name, phone, location, avatar, professionalInfo };
+  
+  // If professional info is being updated and it's substantial, mark portfolio as submitted
+  if (professionalInfo && (professionalInfo.portfolioUrl || professionalInfo.skills?.length > 0)) {
+    updateData.portfolioSubmittedAt = Date.now();
+  }
+
   const user = await User.findByIdAndUpdate(
     req.user._id,
-    { name, phone, location, avatar, professionalInfo },
+    updateData,
     { new: true, runValidators: true }
   );
 
@@ -128,51 +135,59 @@ export const forgotPassword = asyncHandler(async (req, res) => {
     const user = await User.findOne({ email: emailLower });
 
     if (!user) {
-      return res.json({ success: true, message: 'If your email is registered, an OTP will be sent.' });
+      // For security, do not disclose if email exists. Still log it for dev.
+      console.log(`Forgot password requested for non-existent email: ${emailLower}`);
+      return res.json({ success: true, message: 'If your account exists, an OTP has been sent.' });
     }
 
     // Generate 4-digit OTP
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
     
     user.resetPasswordOTP = otp;
-    user.resetPasswordOTPExpire = Date.now() + 10 * 60 * 1000; // 10 mins
+    user.resetPasswordOTPExpire = Date.now() + 15 * 60 * 1000; // Increased to 15 mins for better UX
     await user.save();
+
+    console.log(`OTP generated for ${user.email}: ${otp}`);
 
     // HTML Message
     const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
-        <h2 style="color: #4f46e5; text-align: center;">Smart Local Life</h2>
-        <p>Hello ${user.name},</p>
-        <p>You requested to reset your password. Please use the following <strong>4-digit OTP</strong> to complete the process:</p>
-        <div style="background: #f3f4f6; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 10px; color: #1f2937; border-radius: 8px; margin: 20px 0;">
-          ${otp}
+      <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: auto; padding: 40px; border: 1px solid #f0f0f0; border-radius: 24px; background: #ffffff; color: #1e293b;">
+        <div style="text-align: center; mb: 30px;">
+          <h2 style="color: #4f46e5; font-weight: 800; font-size: 28px; margin-bottom: 8px;">C2C Academy</h2>
+          <p style="color: #64748b; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Secure Access Portal</p>
         </div>
-        <p style="color: #6b7280; font-size: 14px;">This code is valid for 10 minutes. If you did not request this, please ignore this email.</p>
-        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-        <p style="font-size: 12px; color: #9ca3af; text-align: center;">&copy; ${new Date().getFullYear()} Smart Local Life</p>
+        <div style="padding: 20px 0; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; margin: 30px 0;">
+          <p style="font-size: 16px; line-height: 1.6;">Hello <strong>${user.name}</strong>,</p>
+          <p style="font-size: 16px; line-height: 1.6;">A password reset was requested for your account. Please use the following verification code to proceed:</p>
+          <div style="background: #f8fafc; padding: 30px; text-align: center; font-size: 42px; font-weight: 900; letter-spacing: 12px; color: #4f46e5; border-radius: 16px; margin: 24px 0; border: 1px solid #e2e8f0;">
+            ${otp}
+          </div>
+          <p style="color: #ef4444; font-size: 14px; text-align: center; font-weight: 600;">Valid for 15 minutes only.</p>
+        </div>
+        <p style="color: #94a3b8; font-size: 13px; text-align: center;">If you did not request this reset, your account is still secure. No further action is required.</p>
+        <p style="font-size: 11px; color: #cbd5e1; text-align: center; margin-top: 40px;">&copy; ${new Date().getFullYear()} Campus to Corporate Platform. All rights reserved.</p>
       </div>
     `;
 
     try {
       await sendEmail({
         email: user.email,
-        subject: 'Password Reset OTP - Smart Local Life',
+        subject: `[C2C] ${otp} is your verification code`,
         message: `Your password reset OTP is ${otp}`,
         html
       });
+      console.log(`Email successfully sent to ${user.email}`);
     } catch (emailErr) {
-      console.error('Email Dispatch Error:', emailErr);
-      // We still return success: true but inform them via message if possible? 
-      // Better to throw a specific error so they know it failed.
+      console.error('Email Dispatch Error Details:', emailErr);
       res.status(500);
-      throw new Error(`Email could not be sent: ${emailErr.message}`);
+      throw new Error(`Email delivery failed. This usually happens if SMTP is misconfigured.`);
     }
     
-    res.json({ success: true, message: 'OTP sent to your registered email.' });
+    res.json({ success: true, message: 'Verification code sent to your email.' });
   } catch (err) {
-    console.error('Forgot Password Error:', err);
-    res.status(500);
-    throw new Error('Could not send the password reset email. Please try again later.');
+    console.error('Recover Password Exception:', err);
+    res.status(res.statusCode || 500);
+    throw new Error(err.message || 'Server error occurred during password recovery.');
   }
 });
 
@@ -228,9 +243,11 @@ export const becomeProvider = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
 
   // Requirement: User must have at least one professional badge
-  if (!user.badges || user.badges.length === 0) {
+  const hasProfessionalBadge = user.badges?.some(b => b.name.includes('Professional'));
+  
+  if (!hasProfessionalBadge) {
     res.status(403);
-    throw new Error('You must earn a Professional Merit Badge in the Learning Hub before becoming a provider.');
+    throw new Error('You must earn a Professional Merit Badge in the Learning Academy before transitioning to a Provider role.');
   }
 
   user.role = 'provider';

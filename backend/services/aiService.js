@@ -50,14 +50,15 @@ export const chatWithAI = async (userMessage, conversationHistory = []) => {
       history: validHistory,
     });
 
-    const prompt = `${SYSTEM_CONTEXT}\n\nUser message: "${userMessage}"\n\nEnsure the response is valid JSON according to the schema.`;
+    const prompt = `${SYSTEM_CONTEXT}\n\nUser message: "${userMessage}"`;
     const result = await chat.sendMessage(prompt);
     const text   = result.response.text();
 
     try {
-      // If we used responseMimeType: "application/json", text is already JSON
+      // With responseMimeType: "application/json", text is ALWAYS valid JSON
       return JSON.parse(text);
     } catch (parseErr) {
+      console.error('Gemini JSON Parse Error:', parseErr.message, 'Raw text:', text);
       // Fallback: Find JSON block if Gemini still adds conversational text
       try {
         const jsonMatch = text.match(/\{[\s\S]*\}/);

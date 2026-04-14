@@ -158,15 +158,24 @@ const ProviderDashboard = () => {
 
       {/* ── Status Banner (Verification) ── */}
       {!user?.isApproved && (
-        <div className="mb-10 card bg-gradient-to-r from-amber-500 to-orange-600 p-8 flex flex-col md:flex-row items-center gap-8 text-white border-none shadow-2xl shadow-amber-500/30">
+        <div className={`mb-10 card p-8 flex flex-col md:flex-row items-center gap-8 text-white border-none shadow-2xl ${user?.portfolioSubmittedAt ? 'bg-gradient-to-r from-blue-600 to-indigo-700 shadow-indigo-500/30' : 'bg-gradient-to-r from-amber-500 to-orange-600 shadow-amber-500/30'}`}>
           <div className="w-20 h-20 rounded-3xl bg-white/20 backdrop-blur-md flex items-center justify-center flex-shrink-0">
-            <ClockIcon className="w-10 h-10 text-white" />
+            {user?.portfolioSubmittedAt ? <PaperAirplaneIcon className="w-10 h-10 text-white" /> : <ClockIcon className="w-10 h-10 text-white" />}
           </div>
           <div className="flex-1 text-center md:text-left">
-            <h2 className="text-2xl font-black mb-1">Account Review Required</h2>
-            <p className="text-white/80">Our admins take merit seriously. Please complete your professional profile with your badges, resume, and skills to unlock premium assignments.</p>
+            <h2 className="text-2xl font-black mb-1">{user?.portfolioSubmittedAt ? 'Application Under Review' : 'Account Review Required'}</h2>
+            <p className="text-white/80">
+              {user?.portfolioSubmittedAt 
+                ? `You submitted your portfolio on ${new Date(user.portfolioSubmittedAt).toLocaleDateString()}. Our admins are currently validating your merit badges. You'll be notified via email.` 
+                : 'Our admins take merit seriously. Please complete your professional profile with your badges, resume, and skills to unlock premium assignments.'}
+            </p>
           </div>
-          <button onClick={() => setActiveTab('verify')} className="px-8 py-4 bg-white text-amber-600 font-black rounded-[2rem] shadow-xl hover:scale-105 transition-all">Submit Portfolio →</button>
+          <button 
+            onClick={() => setActiveTab('verify')} 
+            className="px-8 py-4 bg-white text-gray-900 font-black rounded-[2rem] shadow-xl hover:scale-105 transition-all"
+          >
+            {user?.portfolioSubmittedAt ? 'Update Profile' : 'Submit Portfolio →'}
+          </button>
         </div>
       )}
 
@@ -295,14 +304,26 @@ const ProviderDashboard = () => {
                         </thead>
                         <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
                            {myApps.map(app => (
-                             <tr key={app._id} className="text-gray-900 dark:text-white">
-                                <td className="px-10 py-6 font-bold text-sm">{app.title}</td>
+                             <tr key={app._id} className="text-gray-900 dark:text-white group">
+                                <td className="px-10 py-6">
+                                   <div className="font-bold text-sm">{app.title}</div>
+                                   {app.status === 'accepted' && (
+                                     <button 
+                                       onClick={() => navigate(`/workroom/${app._id}`)}
+                                       className="mt-2 flex items-center gap-1 text-[10px] font-black uppercase text-primary-600 hover:text-primary-700 transition"
+                                     >
+                                        <PaperAirplaneIcon className="w-3 h-3" /> Enter Special Workroom
+                                     </button>
+                                   )}
+                                </td>
                                 <td className="px-10 py-6 font-black text-sm">{formatPrice(app.budget)}</td>
                                 <td className="px-10 py-6">
                                    <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                                     app.status === 'open' ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-700'
+                                     app.status === 'accepted' ? 'bg-green-100 text-green-700' : 
+                                     app.status === 'rejected' ? 'bg-rose-100 text-rose-700' :
+                                     'bg-amber-100 text-amber-700'
                                    }`}>
-                                      {app.status}
+                                      {app.status === 'accepted' ? 'Hired / In Progress' : app.status}
                                    </span>
                                 </td>
                              </tr>

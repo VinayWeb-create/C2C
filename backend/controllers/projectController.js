@@ -38,6 +38,13 @@ export const applyForProject = asyncHandler(async (req, res) => {
         throw new Error('Project is no longer accepting applications');
     }
 
+    // NEW: Check if provider is approved by admin
+    const user = await User.findById(req.user._id);
+    if (!user.isApproved) {
+        res.status(403);
+        throw new Error('Your professional portfolio is still under review. You can apply once an admin approves your profile.');
+    }
+
     // Check if player already applied
     const alreadyApplied = project.applications.find(
         (app) => app.provider.toString() === req.user._id.toString()

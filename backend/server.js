@@ -16,6 +16,7 @@ import adminRoutes   from './routes/adminRoutes.js';
 import aiRoutes      from './routes/aiRoutes.js';
 import reviewRoutes   from './routes/reviewRoutes.js';
 import projectRoutes  from './routes/projectRoutes.js';
+import messageRoutes from './routes/messageRoutes.js';
 
 connectDB();
 
@@ -52,6 +53,8 @@ app.use('/api', apiLimiter);
 
 app.use('/api/auth',     authRoutes);
 app.use('/api/services', serviceRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/messages', messageRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/admin',    adminRoutes);
 app.use('/api/reviews',  reviewRoutes);
