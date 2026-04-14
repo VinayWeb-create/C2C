@@ -11,7 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
 const ProfileSetupPage = () => {
-  const { user, setUser } = useAuth();
+  const { user, updateUser } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -43,8 +43,7 @@ const ProfileSetupPage = () => {
         isProfileComplete: true
       });
       
-      setUser(data.user);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      updateUser(data.user);
       toast.success('Professional profile built successfully! 🚀');
       navigate('/dashboard/user');
     } catch (err) {
