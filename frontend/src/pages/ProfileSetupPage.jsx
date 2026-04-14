@@ -48,6 +48,7 @@ const ProfileSetupPage = () => {
       toast.success('Professional profile built successfully! 🚀');
       navigate('/dashboard/user');
     } catch (err) {
+      console.error('PROFILING ERROR:', err);
       const msg = err.response?.data?.message || 'Failed to update profile';
       toast.error(msg);
     } finally {
