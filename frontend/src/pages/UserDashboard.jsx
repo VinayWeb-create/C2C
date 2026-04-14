@@ -41,7 +41,17 @@ const UserDashboard = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const hasProfessionalBadge = user?.badges?.some(b => b.name.includes('Professional'));
+  const hasProfessionalBadge = user?.badges?.some(b => b.role === user.activeLearningDomain);
+  const currentTestResult = user?.testResults?.find(r => r.category === user.activeLearningDomain);
+
+  // Calculate dynamic progress
+  const calculateProgress = () => {
+    if (!user?.activeLearningDomain) return 10;
+    if (hasProfessionalBadge) return 100;
+    if (currentTestResult) return 75; // Took the test but no badge yet
+    return 40; // Chosen domain but no test yet
+  };
+  const academyProgress = calculateProgress();
 
   if (loading) return <div className="min-h-screen flex items-center justify-center dark:bg-gray-950"><Loader size="lg" /></div>;
 
@@ -70,15 +80,15 @@ const UserDashboard = () => {
             </div>
             <p className="text-gray-500 dark:text-gray-400 font-medium">
               {hasProfessionalBadge 
-                ? 'Authorized Professional Provider' 
-                : 'Student Advocate at C2C Academy'}
+                ? `${user.activeLearningDomain} Authorized Professional` 
+                : user.activeLearningDomain ? `${user.activeLearningDomain} Specialist Trainee` : 'Student Advocate at C2C Academy'}
             </p>
           </div>
         </div>
 
         <div className="flex flex-wrap justify-center gap-3 relative z-10">
           <button onClick={() => navigate('/learning')} className="btn-primary py-3 px-8 rounded-2xl flex items-center gap-2">
-            <AcademicCapIcon className="w-5 h-5" /> Continue Learning
+            <AcademicCapIcon className="w-5 h-5" /> {user.activeLearningDomain ? `Continue ${user.activeLearningDomain}` : 'Choose a Domain'}
           </button>
           {hasProfessionalBadge ? (
             <button 
@@ -99,10 +109,10 @@ const UserDashboard = () => {
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
         {[
           { label: 'Videos Learned', value: stats.videos, icon: PlayCircleIcon, color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
-          { label: 'Roadmaps Started', value: stats.roadmaps, icon: MapIcon, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-          { label: 'Projects Done', value: stats.projects, icon: BriefcaseIcon, color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-900/20' },
-          { label: 'Practice Tests', value: stats.tests, icon: BeakerIcon, color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-900/20' },
-          { label: 'Merit Score', value: stats.badges > 0 ? '100%' : '0%', icon: TrophyIcon, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20' },
+          { label: 'Roadmaps Started', value: user.activeLearningDomain ? 1 : 0, icon: MapIcon, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+          { label: 'Projects Done', value: currentTestResult ? 1 : 0, icon: BriefcaseIcon, color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-900/20' },
+          { label: 'Practice Tests', value: currentTestResult ? 1 : 0, icon: BeakerIcon, color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-900/20' },
+          { label: 'Merit Score', value: hasProfessionalBadge ? '100%' : currentTestResult ? 'Assessment Pending' : '0%', icon: TrophyIcon, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20' },
         ].map((card) => {
           const Icon = card.icon;
           return (
@@ -126,10 +136,9 @@ const UserDashboard = () => {
                  <h2 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-widest flex items-center gap-3">
                    <ChartBarIcon className="w-6 h-6 text-primary-600" /> Current Learning Journey
                  </h2>
-                 <select className="bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-xs font-bold py-2 px-4">
-                    <option>Web Development</option>
-                    <option>Graphic Design</option>
-                 </select>
+                 <div className="bg-primary-50 dark:bg-primary-900/10 text-primary-600 dark:text-primary-400 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border border-primary-200/50">
+                    {user.activeLearningDomain || 'Domain Not Selected'}
+                 </div>
               </div>
 
               <div className="space-y-10">
@@ -139,12 +148,12 @@ const UserDashboard = () => {
                           <p className="text-sm font-black text-gray-900 dark:text-white">Academy Progression</p>
                           <p className="text-xs text-gray-400">Roadmap to Professional Badge</p>
                        </div>
-                       <span className="text-xl font-black text-primary-600">{hasProfessionalBadge ? '100%' : '40%'}</span>
+                       <span className="text-xl font-black text-primary-600">{academyProgress}%</span>
                     </div>
                     <div className="w-full h-4 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                        <motion.div 
                          initial={{ width: 0 }}
-                         animate={{ width: hasProfessionalBadge ? '100%' : '40%' }}
+                         animate={{ width: `${academyProgress}%` }}
                          className="h-full bg-gradient-to-r from-primary-600 to-indigo-500 shadow-lg shadow-primary-600/20"
                        />
                     </div>
@@ -152,9 +161,9 @@ const UserDashboard = () => {
 
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {[
-                      { title: 'Foundations', status: 'Completed', icon: CheckBadgeIcon, color: 'text-green-500' },
-                      { title: 'Project Work', status: hasProfessionalBadge ? 'Completed' : 'Started', icon: BriefcaseIcon, color: hasProfessionalBadge ? 'text-green-500' : 'text-blue-500' },
-                      { title: 'Merit Test', status: hasProfessionalBadge ? '100% Score' : 'Locked', icon: TrophyIcon, color: hasProfessionalBadge ? 'text-amber-500' : 'text-gray-300' },
+                      { title: user.activeLearningDomain || 'Foundations', status: user.activeLearningDomain ? 'In Progress' : 'Pending', icon: CheckBadgeIcon, color: user.activeLearningDomain ? 'text-blue-500' : 'text-gray-300' },
+                      { title: 'Project Work', status: hasProfessionalBadge ? 'Completed' : currentTestResult ? 'Under Review' : 'Locked', icon: BriefcaseIcon, color: hasProfessionalBadge ? 'text-green-500' : currentTestResult ? 'text-blue-500' : 'text-gray-300' },
+                      { title: 'Merit Test', status: hasProfessionalBadge ? '100% Score' : currentTestResult ? 'Score: ' + currentTestResult.score : 'Locked', icon: TrophyIcon, color: hasProfessionalBadge ? 'text-amber-500' : currentTestResult ? 'text-blue-500' : 'text-gray-300' },
                       { title: 'Provider Badge', status: hasProfessionalBadge ? 'Earned' : 'Locked', icon: ShieldCheckIcon, color: hasProfessionalBadge ? 'text-primary-500' : 'text-gray-300' },
                     ].map((step) => (
                       <div key={step.title} className="p-5 bg-gray-50 dark:bg-gray-800/50 rounded-[1.5rem] border border-gray-100 dark:border-gray-750 flex items-center justify-between">
