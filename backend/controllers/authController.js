@@ -57,21 +57,41 @@ export const getMe = asyncHandler(async (req, res) => {
 // @access  Private
 export const updateProfile = asyncHandler(async (req, res) => {
   const { name, phone, location, avatar, professionalInfo, isProfileComplete } = req.body;
+  const user = await User.findById(req.user._id);
 
-  const updateData = { name, phone, location, avatar, professionalInfo, isProfileComplete };
-  
-  // If professional info is being updated and it's substantial, mark portfolio as submitted
-  if (professionalInfo && (professionalInfo.portfolioUrl || professionalInfo.skills?.length > 0)) {
-    updateData.portfolioSubmittedAt = Date.now();
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
   }
 
-  const user = await User.findByIdAndUpdate(
-    req.user._id,
-    updateData,
-    { new: true, runValidators: true }
-  );
+  // Update top-level fields
+  if (name) user.name = name;
+  if (phone) user.phone = phone;
+  if (location) user.location = location;
+  if (avatar) user.avatar = avatar;
+  if (isProfileComplete !== undefined) user.isProfileComplete = isProfileComplete;
 
-  res.json({ success: true, user });
+  // Update nested professional info
+  if (professionalInfo) {
+    user.professionalInfo = {
+      ...user.professionalInfo.toObject(),
+      ...professionalInfo
+    };
+    
+    // Mark portfolio as submitted if substantial info provided
+    if (professionalInfo.portfolioUrl || (professionalInfo.skills && professionalInfo.skills.length > 0)) {
+      user.portfolioSubmittedAt = Date.now();
+    }
+  }
+
+  try {
+    const updatedUser = await user.save();
+    res.json({ success: true, user: updatedUser });
+  } catch (err) {
+    console.error('Profile Save Error:', err);
+    res.status(400);
+    throw new Error(err.message || 'Validation failed for profile update');
+  }
 });
 
 // @desc    Add badge to user (Earned via learning)

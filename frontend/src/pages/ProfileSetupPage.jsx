@@ -29,11 +29,13 @@ const ProfileSetupPage = () => {
     setLoading(true);
     try {
       const { data } = await api.put('/auth/profile', {
-        ...formData,
+        name: formData.name,
+        phone: formData.phone,
         professionalInfo: {
           education: formData.education,
           resumeUrl: formData.resumeLink,
           portfolioUrl: formData.github,
+          linkedInUrl: formData.linkedin,
           bio: formData.bio,
           skills: []
         },
