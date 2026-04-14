@@ -1,11 +1,12 @@
-import { Routes, Route, Link, Navigate } from 'react-router-dom';
+import { Routes, Route, Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { useEffect } from 'react';
+import { useAuth } from './context/AuthContext';
 import ProtectedRoute    from './components/common/ProtectedRoute';
 import Navbar   from './components/common/Navbar';
 import Footer   from './components/common/Footer';
 import AIChatbot from './components/ai/AIChatbot';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useLocation } from 'react-router-dom';
 
 // Pages
 import HomePage          from './pages/HomePage';
@@ -22,10 +23,23 @@ import ForgotPassword    from './pages/ForgotPassword';
 import LearningPage      from './pages/LearningPage';
 import AdminDashboard     from './pages/AdminDashboard';
 import WorkroomPage      from './pages/WorkroomPage';
+import ProfileSetupPage   from './pages/ProfileSetupPage';
 
 const App = () => {
   const location = useLocation();
-  
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    if (user && !user.isProfileComplete && 
+        location.pathname !== '/profile-setup' && 
+        location.pathname !== '/login' && 
+        location.pathname !== '/register') {
+      navigate('/profile-setup');
+    }
+  }, [location.pathname, user, navigate]);
+
   return (
     <>
         <div className="min-h-screen flex flex-col">
@@ -88,6 +102,12 @@ const App = () => {
               <Route path="/workroom/:id" element={
                 <ProtectedRoute roles={['provider', 'admin']}>
                   <WorkroomPage />
+                </ProtectedRoute>
+              } />
+
+              <Route path="/profile-setup" element={
+                <ProtectedRoute>
+                  <ProfileSetupPage />
                 </ProtectedRoute>
               } />
 

@@ -84,6 +84,15 @@ const userSchema = new mongoose.Schema({
   resetPasswordOTP:     { type: String, select: false },
   resetPasswordOTPExpire: { type: Date, select: false },
   portfolioSubmittedAt: { type: Date },
+  isProfileComplete: { type: Boolean, default: false },
+  testResults: [{
+    category: String,
+    examScore: Number,      // Out of 50
+    projectScore: Number,   // Out of 50
+    githubRepo: String,
+    passed: Boolean,
+    completedAt: { type: Date, default: Date.now }
+  }]
 }, { timestamps: true });
 
 userSchema.index({ 'location': '2dsphere' });

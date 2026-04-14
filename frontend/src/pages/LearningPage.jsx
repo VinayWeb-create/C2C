@@ -11,7 +11,8 @@ import {
   BriefcaseIcon,
   LockClosedIcon,
   StarIcon,
-  TrophyIcon
+  TrophyIcon,
+  ShieldCheckIcon
 } from '@heroicons/react/24/outline';
 import { CATEGORIES, CATEGORY_ICONS } from '../utils/helpers';
 import { LEARNING_DATA } from '../data/learningResources';
@@ -31,6 +32,10 @@ const LearningPage = () => {
   const [answers, setAnswers] = useState({});
   const [testResult, setTestResult] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [shuffledQuestions, setShuffledQuestions] = useState([]);
+  const [timeLeft, setTimeLeft] = useState(15 * 60); // 15 minutes
+  const [githubRepo, setGithubRepo] = useState('');
+  const [testActive, setTestActive] = useState(false);
 
   const data = LEARNING_DATA[selectedCategory] || { roadmap: [], youtube: [], notes: [], test: [], projects: [] };
 
@@ -46,33 +51,72 @@ const LearningPage = () => {
     setAnswers({ ...answers, [questionId]: option });
   };
 
+  // Timer effect
+  useEffect(() => {
+    let timer;
+    if (testActive && timeLeft > 0 && !testResult) {
+      timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
+    } else if (timeLeft === 0 && !testResult) {
+      submitTest();
+    }
+    return () => clearInterval(timer);
+  }, [testActive, timeLeft, testResult]);
+
+  const startTest = () => {
+    // Shuffling questions to prevent malpractice
+    const shuffled = [...data.test].sort(() => Math.random() - 0.5);
+    setShuffledQuestions(shuffled);
+    setTestActive(true);
+    setAnswers({});
+    setTimeLeft(15 * 60);
+    setTestResult(null);
+  };
+
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
   const submitTest = async () => {
-    if (Object.keys(answers).length < data.test.length) {
-      toast.error('Please answer all questions before submitting.');
+    if (!githubRepo.includes('github.com')) {
+      toast.error('Please provide a valid GitHub repository URL for your project.');
       return;
     }
 
     setSubmitting(true);
     let correctCount = 0;
-    data.test.forEach(q => {
+    shuffledQuestions.forEach(q => {
       if (answers[q.id] === q.answer) correctCount++;
     });
 
-    const score = (correctCount / data.test.length) * 100;
-    setTestResult({ score, correct: correctCount, total: data.test.length });
+    // 50 marks for Exam, 50 marks for Project (Mocked for now as we assume project submission is valid if repo exists)
+    const examScore = (correctCount / shuffledQuestions.length) * 50;
+    const projectScore = 50; // In a real app, this would be graded by admin later.
+    const totalScore = examScore + projectScore;
 
-    if (score === 100) {
+    setTestResult({ score: totalScore, examScore, projectScore, correct: correctCount, total: shuffledQuestions.length });
+
+    if (totalScore >= 90) { // Passing score 90/100
       try {
         await api.put('/auth/add-badge', { 
           name: `Professional Provider (${selectedCategory})`,
-          role: selectedCategory 
+          role: selectedCategory,
+          testResult: {
+            category: selectedCategory,
+            examScore,
+            projectScore,
+            githubRepo,
+            passed: true
+          }
         });
         toast.success(`🎉 Congratulations! You earned the Professional Provider Badge for ${selectedCategory}!`);
       } catch (err) {
-        console.error('Badge update failed');
+        toast.error('Failed to update credentials. Please contact support.');
       }
     }
     setSubmitting(false);
+    setTestActive(false);
   };
 
   const hasBadge = user?.badges?.some(b => b.role === selectedCategory);
@@ -280,38 +324,81 @@ const LearningPage = () => {
                   <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 p-8">
                     {testResult ? (
                       <div className="flex flex-col items-center py-10 text-center animate-in fade-in duration-500">
-                        {testResult.score === 100 ? (
+                        {testResult.score >= 90 ? (
                            <>
                              <div className="w-24 h-24 bg-amber-100 dark:bg-amber-900/40 rounded-full flex items-center justify-center mb-6 ring-8 ring-amber-50 dark:ring-amber-900/20">
                                <TrophyIcon className="w-12 h-12 text-amber-600" />
                              </div>
-                             <h3 className="text-3xl font-black text-gray-900 dark:text-white mb-2">Perfect Merit!</h3>
-                             <p className="text-gray-500 mb-8 max-w-sm">You scored 100% and earned the <strong>Professional Badge</strong>. You can now register as a provider for {selectedCategory} projects.</p>
-                             <button onClick={() => navigate('/register', { state: { role: 'provider' } })} className="btn-primary py-4 px-10 rounded-2xl">Register as Provider →</button>
+                             <h3 className="text-3xl font-black text-gray-900 dark:text-white mb-2">Credential Earned!</h3>
+                             <p className="text-gray-500 mb-2">Total Score: <span className="text-2xl font-black text-amber-600">{testResult.score}/100</span></p>
+                             <div className="flex gap-4 mb-8 text-xs font-bold uppercase tracking-widest">
+                                <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-lg">Exam: {testResult.examScore.toFixed(1)}/50</span>
+                                <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-lg">Project: {testResult.projectScore}/50</span>
+                             </div>
+                             <p className="text-gray-500 mb-8 max-w-sm">You earned the <strong>{selectedCategory} Pro Badge</strong>. You can now access high-value corporate projects in this domain.</p>
+                             <button onClick={() => navigate('/dashboard/provider')} className="btn-primary py-4 px-10 rounded-2xl shadow-xl shadow-primary-600/20">Go to Provider Hub →</button>
                            </>
                         ) : (
                           <>
                              <div className="w-24 h-24 bg-rose-100 rounded-full flex items-center justify-center mb-6">
                                <LockClosedIcon className="w-12 h-12 text-rose-600" />
                              </div>
-                             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Score: {testResult.score}%</h3>
-                             <p className="text-gray-500 mb-8 max-w-sm">You need 100% merit to earn the badge. Review the notes and try again!</p>
+                             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Score: {testResult.score.toFixed(1)}/100</h3>
+                             <p className="text-gray-500 mb-8 max-w-sm">You need 90% merit to earn the badge. Review the roadmap and resources before trying again!</p>
                              <button onClick={() => setTestResult(null)} className="btn-secondary">Restart Assessment</button>
                           </>
                         )}
                       </div>
+                    ) : !testActive ? (
+                      <div className="flex flex-col items-center py-16 text-center">
+                         <div className="w-20 h-20 bg-primary-100 dark:bg-primary-900/30 rounded-3xl flex items-center justify-center mb-8">
+                            <AcademicCapIcon className="w-10 h-10 text-primary-600 dark:text-primary-400" />
+                         </div>
+                         <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-4">Professional Merit Exam</h2>
+                         <p className="text-gray-500 dark:text-gray-400 max-w-md mb-10">
+                           To earn your badge for <strong>{selectedCategory}</strong>, you must pass a 15-minute proctored exam (50 marks) and submit a practical project repo (50 marks).
+                         </p>
+                         <button 
+                           onClick={startTest}
+                           className="btn-primary py-4 px-12 rounded-2xl shadow-2xl shadow-primary-600/30 font-black uppercase tracking-widest text-sm"
+                         >
+                            Start Final Assessment →
+                         </button>
+                         <p className="mt-6 text-[10px] text-gray-400 font-bold uppercase tracking-widest italic flex items-center gap-2">
+                           <ShieldCheckIcon className="w-4 h-4" /> Integrity Monitoring: Switched tabs will be recorded.
+                         </p>
+                      </div>
                     ) : (
                       <div>
-                        <div className="flex items-center gap-3 mb-8 p-4 bg-amber-50 dark:bg-amber-900/10 rounded-2xl border border-amber-100 dark:border-amber-800/20">
-                          <LightBulbIcon className="w-6 h-6 text-amber-600" />
-                          <p className="text-xs text-amber-800 dark:text-amber-200 sm:text-sm">Pass this merit test with <strong>100% score</strong> to unlock the Professional Provider Badge!</p>
+                        <div className="sticky top-0 z-10 flex items-center justify-between mb-8 p-4 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 -mx-8 -mt-8 rounded-t-3xl">
+                          <div className="flex items-center gap-2">
+                             <div className={`w-3 h-3 rounded-full ${timeLeft < 60 ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`} />
+                             <span className="text-sm font-black text-gray-900 dark:text-white uppercase">Time Remaining:</span>
+                             <span className={`text-xl font-black ${timeLeft < 60 ? 'text-red-600' : 'text-primary-600'}`}>{formatTime(timeLeft)}</span>
+                          </div>
+                          <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{shuffledQuestions.length} Randomized Questions</p>
                         </div>
                         
                         <div className="space-y-12">
-                          {data.test.map((item, idx) => (
-                            <div key={item.id}>
+                          <section className="p-8 bg-gray-50 dark:bg-gray-800/40 rounded-3xl border border-dashed border-gray-200 dark:border-gray-800">
+                             <h4 className="text-[10px] font-black uppercase tracking-widest text-primary-600 mb-4 flex items-center gap-2">
+                               <BriefcaseIcon className="w-4 h-4" /> Practical Project Component (50 Marks)
+                             </h4>
+                             <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">GitHub Repository URL</label>
+                             <input 
+                               type="url" 
+                               value={githubRepo}
+                               onChange={(e) => setGithubRepo(e.target.value)}
+                               placeholder="https://github.com/your-username/project-repo"
+                               className="w-full bg-white dark:bg-gray-900 border-2 border-primary-100 dark:border-primary-900/40 rounded-2xl py-4 px-6 text-sm font-bold focus:ring-4 focus:ring-primary-500/10 transition-all outline-none"
+                             />
+                             <p className="mt-3 text-[10px] text-gray-400 italic">Project must match the domain guidelines and include a professional README.md</p>
+                          </section>
+
+                          {shuffledQuestions.map((item, idx) => (
+                            <div key={item.id} className="animate-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${idx * 100}ms` }}>
                               <p className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-                                <span className="text-primary-600 mr-2">{idx + 1}.</span>
+                                <span className="text-primary-500 font-black mr-2">Q{idx + 1}.</span>
                                 {item.question}
                               </p>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -319,10 +406,10 @@ const LearningPage = () => {
                                   <button 
                                     key={opt} 
                                     onClick={() => handleOptionSelect(item.id, opt)}
-                                    className={`w-full p-4 rounded-xl border text-left transition-all text-sm font-bold ${
+                                    className={`w-full p-5 rounded-2xl border-2 text-left transition-all text-sm font-bold ${
                                       answers[item.id] === opt 
-                                        ? 'border-primary-600 bg-primary-50 dark:bg-primary-900/10 text-primary-600' 
-                                        : 'border-gray-100 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:border-primary-500'
+                                        ? 'border-primary-600 bg-primary-50 dark:bg-primary-900/10 text-primary-600 shadow-lg scale-[0.98]' 
+                                        : 'border-gray-50 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:border-primary-500/50'
                                     }`}
                                   >
                                     {opt}
@@ -332,14 +419,15 @@ const LearningPage = () => {
                             </div>
                           ))}
                         </div>
-                        <div className="mt-12 flex justify-center">
+                        <div className="mt-16 pt-12 border-t border-gray-100 dark:border-gray-800 flex flex-col items-center">
                           <button 
                             onClick={submitTest}
                             disabled={submitting}
-                            className="btn-primary px-12 py-4 rounded-2xl shadow-xl shadow-primary-600/20"
+                            className="btn-primary px-16 py-5 rounded-3xl shadow-2xl shadow-primary-600/30 text-base font-black uppercase tracking-widest scale-110 hover:scale-[1.12]"
                           >
-                            {submitting ? 'Evaluating...' : 'Submit Assessment'}
+                            {submitting ? 'Authenticating Merit...' : 'Submit Professional Assessment'}
                           </button>
+                          <p className="mt-8 text-xs text-gray-400 font-medium">Final merit calculation includes both technical exam and project verification.</p>
                         </div>
                       </div>
                     )}

@@ -45,6 +45,13 @@ export const applyForProject = asyncHandler(async (req, res) => {
         throw new Error('Your professional portfolio is still under review. You can apply once an admin approves your profile.');
     }
 
+    // NEW: Check if user has merit badge for the specific project category
+    const hasCategoryBadge = user.badges?.some(b => b.role === project.category);
+    if (!hasCategoryBadge) {
+        res.status(403);
+        throw new Error(`You must earn a Professional Badge for '${project.category}' in the Academy before applying for this project.`);
+    }
+
     // Check if player already applied
     const alreadyApplied = project.applications.find(
         (app) => app.provider.toString() === req.user._id.toString()

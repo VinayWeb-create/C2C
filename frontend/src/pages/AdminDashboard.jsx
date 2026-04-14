@@ -50,6 +50,7 @@ const AdminDashboard = () => {
   const [recentBookings, setRecentBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview'); // overview, approvals, projects, users, providers
+  const [selectedUser, setSelectedUser] = useState(null);
 
   // Project Form State
   const [showProjectForm, setShowProjectForm] = useState(false);
@@ -424,6 +425,9 @@ const AdminDashboard = () => {
                           </div>
                         </div>
                         <div className="flex gap-3">
+                          <button onClick={() => setSelectedUser(prov)} className="p-3 bg-gray-100 rounded-2xl hover:bg-gray-200 transition">
+                            <Eye className="w-5 h-5 text-gray-500" />
+                          </button>
                           <button onClick={() => handleApprove(prov._id)} className="flex-1 py-3 bg-primary-600 text-white font-black rounded-2xl text-xs uppercase tracking-widest shadow-lg shadow-primary-600/20">Approve</button>
                           <button onClick={() => handleReject(prov._id)} className="flex-1 py-3 bg-rose-50 text-rose-600 font-black rounded-2xl text-xs uppercase tracking-widest border border-rose-100">Reject</button>
                         </div>
@@ -469,7 +473,10 @@ const AdminDashboard = () => {
                             </div>
                           </td>
                           <td className="px-10 py-6 text-right">
-                             <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition text-gray-400"><MoreVertical className="w-4 h-4" /></button>
+                             <div className="flex justify-end gap-2">
+                               <button onClick={() => setSelectedUser(user)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition text-primary-600" title="View Details"><Eye className="w-4 h-4" /></button>
+                               <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition text-gray-400"><MoreVertical className="w-4 h-4" /></button>
+                             </div>
                           </td>
                         </tr>
                       ))}
@@ -577,6 +584,100 @@ const AdminDashboard = () => {
            </div>
         </div>
       )}
+      {/* User Detail Modal */}
+      <AnimatePresence>
+        {selectedUser && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white dark:bg-gray-900 rounded-[3rem] p-10 w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative"
+            >
+               <button onClick={() => setSelectedUser(null)} className="absolute top-8 right-8 p-3 rounded-2xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400"><XCircle className="w-6 h-6" /></button>
+               
+               <div className="flex flex-col md:flex-row gap-10 items-start">
+                  <div className="w-full md:w-1/3 flex flex-col items-center">
+                    <div className="w-32 h-32 rounded-[2.5rem] bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-5xl font-black mb-6">
+                       {selectedUser.name[0]}
+                    </div>
+                    <h2 className="text-2xl font-black text-gray-900 dark:text-white text-center mb-1">{selectedUser.name}</h2>
+                    <p className="text-sm text-gray-500 mb-6">{selectedUser.email}</p>
+                    
+                    <div className="w-full space-y-3">
+                       <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-800">
+                          <p className="text-[10px] font-black uppercase text-gray-400 mb-1">Current Role</p>
+                          <p className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest">{selectedUser.role}</p>
+                       </div>
+                       <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-800">
+                          <p className="text-[10px] font-black uppercase text-gray-400 mb-1">Approval Status</p>
+                          <p className={`text-sm font-bold uppercase tracking-widest ${selectedUser.isApproved ? 'text-green-600' : 'text-amber-600'}`}>
+                             {selectedUser.isApproved ? 'Verified Pro' : 'Verification Pending'}
+                          </p>
+                       </div>
+                    </div>
+                  </div>
+
+                  <div className="flex-1 space-y-8">
+                     <div>
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-primary-600 mb-4 px-2">Professional Summary</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                           <div className="p-5 bg-gray-50 dark:bg-gray-800/40 rounded-3xl border border-gray-100 dark:border-gray-800">
+                              <p className="text-[10px] font-black uppercase text-gray-400 mb-1">Education</p>
+                              <p className="text-sm font-bold">{selectedUser.professionalInfo?.education || 'Not Provided'}</p>
+                           </div>
+                           <div className="p-5 bg-gray-50 dark:bg-gray-800/40 rounded-3xl border border-gray-100 dark:border-gray-800">
+                              <p className="text-[10px] font-black uppercase text-gray-400 mb-1">Resume access</p>
+                              {selectedUser.professionalInfo?.resumeUrl ? (
+                                <a href={selectedUser.professionalInfo.resumeUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-primary-600 flex items-center gap-1 hover:underline">
+                                   View Document <Eye className="w-3 h-3" />
+                                </a>
+                              ) : <p className="text-sm font-bold text-gray-400 italic">No resume linked</p>}
+                           </div>
+                        </div>
+                     </div>
+
+                     <div className="p-6 bg-gray-50 dark:bg-gray-800/40 rounded-3xl border border-gray-100 dark:border-gray-800">
+                        <p className="text-[10px] font-black uppercase text-gray-400 mb-3">Professional Bio</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed italic">
+                           "{selectedUser.professionalInfo?.bio || 'This user has not written a bio yet.'}"
+                        </p>
+                     </div>
+
+                     <div>
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-primary-600 mb-4 px-2">Career Merit Badges</h4>
+                        <div className="flex flex-wrap gap-3">
+                           {(selectedUser.badges || []).map(badge => (
+                             <div key={badge.name} className="flex items-center gap-2 p-3 px-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/20 rounded-2xl">
+                                <Trophy className="w-4 h-4 text-amber-500" />
+                                <span className="text-xs font-black text-amber-700 dark:text-amber-500 uppercase tracking-widest">{badge.name}</span>
+                             </div>
+                           ))}
+                           {(selectedUser.badges || []).length === 0 && <p className="text-xs text-gray-400 italic px-2">No badges earned yet in the academy.</p>}
+                        </div>
+                     </div>
+
+                     <div className="pt-6 flex gap-4 border-t border-gray-50 dark:border-gray-800">
+                        {selectedUser.professionalInfo?.portfolioUrl && (
+                          <a href={selectedUser.professionalInfo.portfolioUrl} target="_blank" rel="noopener noreferrer" className="flex-1 py-4 bg-gray-900 text-white rounded-2xl text-center text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2">
+                            <Search className="w-4 h-4" /> GitHub Portfolio
+                          </a>
+                        )}
+                        {!selectedUser.isApproved && selectedUser.role === 'provider' && (
+                           <button 
+                             onClick={() => { handleApprove(selectedUser._id); setSelectedUser(null); }}
+                             className="flex-1 py-4 bg-primary-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-primary-600/20"
+                           >
+                             Verify & Approve
+                           </button>
+                        )}
+                     </div>
+                  </div>
+               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

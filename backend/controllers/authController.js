@@ -78,18 +78,21 @@ export const updateProfile = asyncHandler(async (req, res) => {
 // @route   PUT /api/auth/add-badge
 // @access  Private
 export const addBadge = asyncHandler(async (req, res) => {
-  const { name, role } = req.body;
+  const { name, role, testResult } = req.body;
   const user = await User.findById(req.user._id);
 
   // Check if badge already exists
   const hasBadge = user.badges.find(b => b.name === name);
-  if (hasBadge) {
-    return res.json({ success: true, message: 'Badge already earned', user });
+  if (!hasBadge) {
+    user.badges.push({ name, role });
   }
 
-  user.badges.push({ name, role });
-  await user.save();
+  // Save the formal test result for admin audit
+  if (testResult) {
+    user.testResults.push(testResult);
+  }
 
+  await user.save();
   res.json({ success: true, user });
 });
 
