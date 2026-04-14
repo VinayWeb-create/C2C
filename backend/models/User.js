@@ -43,11 +43,6 @@ const userSchema = new mongoose.Schema({
     issuedAt: { type: Date, default: Date.now },
     role: String // The role they earned the badge for
   }],
-  testResults: [{
-    testId: String,
-    score: Number,
-    completedAt: { type: Date, default: Date.now }
-  }],
   isApproved: { 
     type: Boolean, 
     default: function() {
