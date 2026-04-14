@@ -25,6 +25,7 @@ import AdminDashboard     from './pages/AdminDashboard';
 import WorkroomPage      from './pages/WorkroomPage';
 import ProfileSetupPage   from './pages/ProfileSetupPage';
 import ProfilePage from './pages/ProfilePage';
+import Loader from './components/common/Loader';
 
 const App = () => {
   const location = useLocation();
@@ -33,13 +34,26 @@ const App = () => {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    if (!initialLoad && user && !user.isProfileComplete && 
-        location.pathname !== '/profile-setup' && 
-        location.pathname !== '/login' && 
-        location.pathname !== '/register') {
-      navigate('/profile-setup');
+    if (!initialLoad && user) {
+      if (!user.isProfileComplete && 
+          location.pathname !== '/profile-setup' && 
+          location.pathname !== '/login' && 
+          location.pathname !== '/register' &&
+          location.pathname !== '/forgot-password') {
+        navigate('/profile-setup');
+      } else if (user.isProfileComplete && location.pathname === '/profile-setup') {
+        navigate(user.role === 'provider' ? '/dashboard/provider' : '/dashboard/user');
+      }
     }
   }, [location.pathname, user, navigate, initialLoad]);
+
+  if (initialLoad) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
+        <Loader size="lg" />
+      </div>
+    );
+  }
 
   return (
     <>

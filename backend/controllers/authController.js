@@ -36,12 +36,16 @@ export const login = asyncHandler(async (req, res) => {
     throw new Error('Invalid email or password');
   }
 
-  if (!user.isActive) {
+  // Reload user to ensure all fields are fresh before sending response
+  const freshUser = await User.findById(user._id);
+  console.log(`Backend: User logging in: ${freshUser.email}, isProfileComplete: ${freshUser.isProfileComplete}`);
+
+  if (!freshUser.isActive) {
     res.status(403);
     throw new Error('Account has been deactivated');
   }
 
-  sendTokenResponse(user, 200, res);
+  sendTokenResponse(freshUser, 200, res);
 });
 
 // @desc    Get current user
