@@ -135,6 +135,13 @@ const Navbar = () => {
                         </span>
                       </div>
                       <Link
+                        to="/profile"
+                        onClick={() => setProfileOpen(false)}
+                        className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
+                      >
+                        Career Profile
+                      </Link>
+                      <Link
                         to={dashboardPath}
                         onClick={() => setProfileOpen(false)}
                         className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"

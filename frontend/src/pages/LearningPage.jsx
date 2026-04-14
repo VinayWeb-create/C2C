@@ -12,7 +12,9 @@ import {
   LockClosedIcon,
   StarIcon,
   TrophyIcon,
-  ShieldCheckIcon
+  ShieldCheckIcon,
+  ArrowRightIcon,
+  BookOpenIcon
 } from '@heroicons/react/24/outline';
 import { CATEGORIES, CATEGORY_ICONS } from '../utils/helpers';
 import { LEARNING_DATA } from '../data/learningResources';
@@ -25,7 +27,8 @@ import toast from 'react-hot-toast';
 const LearningPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [selectedCategory, setSelectedCategory] = useState(CATEGORIES[0]);
+  const [domainSelected, setDomainSelected] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [activeTab, setActiveTab] = useState('roadmap'); 
   
   // Test State
@@ -37,7 +40,17 @@ const LearningPage = () => {
   const [githubRepo, setGithubRepo] = useState('');
   const [testActive, setTestActive] = useState(false);
 
-  const data = LEARNING_DATA[selectedCategory] || { roadmap: [], youtube: [], notes: [], test: [], projects: [] };
+  const data = selectedCategory ? (LEARNING_DATA[selectedCategory] || { roadmap: [], youtube: [], notes: [], test: [], projects: [] }) : null;
+
+  const handleDomainChoice = (category) => {
+    setSelectedCategory(category);
+    setDomainSelected(true);
+    setActiveTab('roadmap');
+  };
+
+  const handleOptionSelect = (questionId, option) => {
+    setAnswers({ ...answers, [questionId]: option });
+  };
 
   const tabs = [
     { id: 'roadmap', label: 'Roadmap', icon: MapIcon },
@@ -47,11 +60,7 @@ const LearningPage = () => {
     { id: 'test',     label: 'Skill Test',        icon: CheckCircleIcon, protected: true },
   ];
 
-  const handleOptionSelect = (questionId, option) => {
-    setAnswers({ ...answers, [questionId]: option });
-  };
-
-  // Timer effect
+  // Rest of effects...
   useEffect(() => {
     let timer;
     if (testActive && timeLeft > 0 && !testResult) {
@@ -63,7 +72,6 @@ const LearningPage = () => {
   }, [testActive, timeLeft, testResult]);
 
   const startTest = () => {
-    // Shuffling questions to prevent malpractice
     const shuffled = [...data.test].sort(() => Math.random() - 0.5);
     setShuffledQuestions(shuffled);
     setTestActive(true);
@@ -90,14 +98,13 @@ const LearningPage = () => {
       if (answers[q.id] === q.answer) correctCount++;
     });
 
-    // 50 marks for Exam, 50 marks for Project (Mocked for now as we assume project submission is valid if repo exists)
     const examScore = (correctCount / shuffledQuestions.length) * 50;
-    const projectScore = 50; // In a real app, this would be graded by admin later.
+    const projectScore = 50;
     const totalScore = examScore + projectScore;
 
     setTestResult({ score: totalScore, examScore, projectScore, correct: correctCount, total: shuffledQuestions.length });
 
-    if (totalScore >= 90) { // Passing score 90/100
+    if (totalScore >= 90) {
       try {
         await api.put('/auth/add-badge', { 
           name: `Professional Provider (${selectedCategory})`,
@@ -121,33 +128,80 @@ const LearningPage = () => {
 
   const hasBadge = user?.badges?.some(b => b.role === selectedCategory);
 
+  if (!domainSelected) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 py-20 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+             <span className="px-5 py-2 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-xs font-black uppercase tracking-widest mb-4 inline-block">
+               Phase 1: Domain Selection
+             </span>
+             <h1 className="text-5xl font-black text-gray-900 dark:text-white mb-6">Choose Your Career Domain</h1>
+             <p className="text-gray-500 max-w-2xl mx-auto text-lg">
+                To provide you with the most relevant resources, roadmaps, and certification tests, 
+                please select the professional domain you wish to specialize in.
+             </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {CATEGORIES.map(cat => (
+              <motion.button
+                key={cat}
+                whileHover={{ y: -8, scale: 1.02 }}
+                onClick={() => handleDomainChoice(cat)}
+                className="group p-8 bg-white dark:bg-gray-900 rounded-[2.5rem] border border-gray-100 dark:border-gray-800 text-left hover:shadow-2xl hover:shadow-primary-600/10 transition-all"
+              >
+                <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-2xl flex items-center justify-center text-4xl mb-6 group-hover:bg-primary-600 group-hover:text-white transition-colors">
+                  {CATEGORY_ICONS[cat]}
+                </div>
+                <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-3">{cat}</h3>
+                <p className="text-gray-500 text-sm mb-8 leading-relaxed">
+                  Master {cat} through our curated curriculum, hands-on projects, and earn a Professional Badge upon completion.
+                </p>
+                <div className="flex items-center gap-2 text-primary-600 font-bold text-sm">
+                  Start Specialization <ArrowRightIcon className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                </div>
+              </motion.button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col md:flex-row gap-8">
         
-        {/* Sidebar Categories */}
+        {/* Sidebar Mini-View (To switch domain) */}
         <aside className="w-full md:w-64 flex-shrink-0">
           <div className="sticky top-24">
-            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4 px-4">Categories</h2>
+            <button 
+              onClick={() => setDomainSelected(false)}
+              className="w-full flex items-center justify-between px-5 py-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 text-sm font-bold text-gray-500 mb-8 hover:text-primary-600 transition-colors"
+            >
+              <span>Switch Domain</span>
+              <BookOpenIcon className="w-5 h-5" />
+            </button>
+            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4 px-4 font-black">Curriculum</h2>
             <div className="space-y-1">
-              {CATEGORIES.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => {
-                    setSelectedCategory(cat);
-                    setTestResult(null);
-                    setAnswers({});
-                  }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
-                    selectedCategory === cat 
-                      ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/20 translate-x-1' 
-                      : 'text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-900'
-                  }`}
-                >
-                  <span className="text-xl">{CATEGORY_ICONS[cat]}</span>
-                  <span className="text-sm font-medium truncate">{cat}</span>
-                </button>
-              ))}
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`w-full flex items-center gap-3 px-4 py-4 rounded-xl text-left transition-all duration-200 ${
+                      activeTab === tab.id 
+                        ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/20 translate-x-1' 
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-900'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="text-sm font-bold">{tab.label}</span>
+                  </button>
+                )
+              })}
             </div>
           </div>
         </aside>

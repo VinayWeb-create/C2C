@@ -24,6 +24,7 @@ import LearningPage      from './pages/LearningPage';
 import AdminDashboard     from './pages/AdminDashboard';
 import WorkroomPage      from './pages/WorkroomPage';
 import ProfileSetupPage   from './pages/ProfileSetupPage';
+import ProfilePage from './pages/ProfilePage';
 
 const App = () => {
   const location = useLocation();
@@ -108,6 +109,12 @@ const App = () => {
               <Route path="/profile-setup" element={
                 <ProtectedRoute>
                   <ProfileSetupPage />
+                </ProtectedRoute>
+              } />
+
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <ProfilePage />
                 </ProtectedRoute>
               } />
 
