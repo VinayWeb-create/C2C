@@ -30,14 +30,14 @@ const Navbar = () => {
 
   const isActive = (path) => location.pathname === path;
 
-  const navLinks = [
-    { to: '/',         label: 'Home' },
-    ...(user?.role === 'provider' || user?.role === 'admin' 
-      ? [{ to: '/projects', label: 'Marketplace' }] 
-      : []),
-    { to: '/learning', label: 'Learning Hub' },
-  ];
-
+ const navLinks_UPDATED = [
+  { to: '/',          label: 'Home' },
+  { to: '/learning',  label: 'Learning Hub' },
+  { to: '/placement', label: '🎓 Placement', highlight: true },    // ← ADD THIS
+  ...(user?.role === 'provider' || user?.role === 'admin'
+    ? [{ to: '/projects', label: 'Marketplace' }]
+    : []),
+];
   let dashboardPath = '/dashboard/user';
   if (user?.role === 'provider') dashboardPath = '/dashboard/provider';
   if (user?.role === 'admin')    dashboardPath = '/dashboard/admin';
