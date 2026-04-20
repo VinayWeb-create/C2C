@@ -4,8 +4,10 @@ import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
+import { GoogleLogin } from '@react-oauth/google';
+
 const LoginPage = () => {
-  const { login, loading } = useAuth();
+  const { login, googleLogin, loading } = useAuth();
   const navigate  = useNavigate();
   const location  = useLocation();
   const from      = location.state?.from?.pathname || '/';
@@ -27,13 +29,24 @@ const LoginPage = () => {
     if (!validate()) return;
     const result = await login(form.email, form.password);
     if (result.success) {
-      if (result.user.role === 'admin') {
-        navigate('/dashboard/admin', { replace: true });
-      } else if (result.user.role === 'provider') {
-        navigate('/dashboard/provider', { replace: true });
-      } else {
-        navigate(from, { replace: true });
-      }
+      redirectUser(result.user);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    const result = await googleLogin(credentialResponse.credential);
+    if (result.success) {
+      redirectUser(result.user);
+    }
+  };
+
+  const redirectUser = (user) => {
+    if (user.role === 'admin') {
+      navigate('/dashboard/admin', { replace: true });
+    } else if (user.role === 'provider') {
+      navigate('/dashboard/provider', { replace: true });
+    } else {
+      navigate(from, { replace: true });
     }
   };
 
@@ -124,6 +137,29 @@ const LoginPage = () => {
               ) : 'Sign in'}
             </button>
           </form>
+
+          {/* OR Divider */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200 dark:border-gray-800"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white dark:bg-gray-900 text-gray-500 uppercase text-[10px] font-bold tracking-widest leading-none">Or continue with</span>
+            </div>
+          </div>
+
+          {/* Google Login Button */}
+          <div className="flex justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => toast.error('Google login failed')}
+              useOneTap
+              theme="outline"
+              size="large"
+              width="320"
+              shape="pill"
+            />
+          </div>
 
           <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
             Don't have an account?{' '}

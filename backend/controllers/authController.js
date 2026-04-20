@@ -2,6 +2,9 @@ import asyncHandler from '../utils/asyncHandler.js';
 import User from '../models/User.js';
 import { sendTokenResponse } from '../utils/generateToken.js';
 import sendEmail from '../utils/sendEmail.js';
+import { OAuth2Client } from 'google-auth-library';
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // @desc    Register user
 // @route   POST /api/auth/register
@@ -56,6 +59,52 @@ export const login = asyncHandler(async (req, res) => {
   }
 
   sendTokenResponse(freshUser, 200, res);
+});
+
+// @desc    Google login/signup
+// @route   POST /api/auth/google
+// @access  Public
+export const googleLogin = asyncHandler(async (req, res) => {
+  const { idToken } = req.body;
+
+  if (!idToken) {
+    res.status(400);
+    throw new Error('Please provide Google ID Token');
+  }
+
+  const ticket = await client.verifyIdToken({
+    idToken,
+    audience: process.env.GOOGLE_CLIENT_ID,
+  });
+
+  const { name, email, picture, sub: googleId } = ticket.getPayload();
+
+  let user = await User.findOne({ email });
+
+  if (user) {
+    // Update existing user with googleId if not present
+    if (!user.googleId) {
+      user.googleId = googleId;
+      await user.save();
+    }
+  } else {
+    // Create new user (Sign up)
+    user = await User.create({
+      name,
+      email,
+      googleId,
+      avatar: picture,
+      password: Math.random().toString(36).slice(-12), // Secure dummy password
+      isProfileComplete: false
+    });
+  }
+
+  if (!user.isActive) {
+    res.status(403);
+    throw new Error('Account has been deactivated');
+  }
+
+  sendTokenResponse(user, 200, res);
 });
 
 // @desc    Get current user

@@ -26,6 +26,11 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'provider', 'admin'],
     default: 'user',
   },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true,
+  },
   // Professional Details (For Providers)
   professionalInfo: {
     education:     { type: String, default: '' },

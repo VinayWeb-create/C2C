@@ -1,5 +1,10 @@
 import express from 'express';
 import dotenv from 'dotenv';
+import dns from 'node:dns';
+
+// Force DNS resolution to use Google's DNS servers for SRV record consistency
+dns.setServers(['8.8.8.8', '8.8.4.4']);
+
 dotenv.config();
 
 import cors from 'cors';
@@ -59,7 +64,6 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/admin',    adminRoutes);
 app.use('/api/reviews',  reviewRoutes);
 app.use('/api/ai',       aiRoutes);
-app.use('/api/projects', projectRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });

@@ -59,6 +59,23 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const googleLogin = async (idToken) => {
+    setLoading(true);
+    try {
+      const { data } = await api.post('/auth/google', { idToken });
+      localStorage.setItem('token', data.token);
+      updateUser(data.user);
+      toast.success(`Google sign-in successful! Welcome, ${data.user.name}`);
+      return { success: true, user: data.user };
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Google login failed';
+      toast.error(msg);
+      return { success: false, error: msg };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = async () => {
     try { await api.post('/auth/logout'); } catch (_) {}
     localStorage.removeItem('token');
@@ -89,7 +106,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, initialLoad, register, login, logout, updateUser, becomeProvider }}>
+    <AuthContext.Provider value={{ user, loading, initialLoad, register, login, googleLogin, logout, updateUser, becomeProvider }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,7 +1,6 @@
 import express from 'express';
-// Missing import — add to the import line:
 import {
-  register, login, getMe, addBadge, setActiveDomain, completeVideo,
+  register, login, googleLogin, getMe, addBadge, setActiveDomain, completeVideo,
   becomeProvider, updateProfile, changePassword, logout,
   forgotPassword, verifyOTP, resetPassword,
 } from '../controllers/authController.js';
@@ -12,6 +11,7 @@ const router = express.Router();
 
 router.post('/register', authLimiter, register);
 router.post('/login',    authLimiter, login);
+router.post('/google',   googleLogin);
 router.post('/logout',   protect,     logout);
 router.get ('/me',       protect,     getMe);
 router.put ('/profile',  protect,     updateProfile);
