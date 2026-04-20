@@ -30,7 +30,7 @@ const Navbar = () => {
 
   const isActive = (path) => location.pathname === path;
 
- const navLinks_UPDATED = [
+ const navLinks = [
   { to: '/',          label: 'Home' },
   { to: '/learning',  label: 'Learning Hub' },
   { to: '/placement', label: '🎓 Placement', highlight: true },    // ← ADD THIS
