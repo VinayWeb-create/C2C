@@ -1,8 +1,8 @@
 import express from 'express';
+// Missing import — add to the import line:
 import {
-  register, login, getMe, addBadge, setActiveDomain,
-  becomeProvider,
-  updateProfile, changePassword, logout,
+  register, login, getMe, addBadge, setActiveDomain, completeVideo,
+  becomeProvider, updateProfile, changePassword, logout,
   forgotPassword, verifyOTP, resetPassword,
 } from '../controllers/authController.js';
 import { protect } from '../middleware/authMiddleware.js';
