@@ -1,25 +1,32 @@
 import nodemailer from 'nodemailer';
 
 const sendEmail = async (options) => {
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.SMTP_EMAIL,
-      pass: process.env.SMTP_PASSWORD,
-    },
-  });
+  try {
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: process.env.SMTP_PORT || 587,
+      secure: false, // true for 465, false for other ports
+      auth: {
+        user: process.env.SMTP_EMAIL,
+        pass: process.env.SMTP_PASSWORD,
+      },
+    });
 
-  const message = {
-    from: `${process.env.FROM_NAME} <${process.env.SMTP_EMAIL}>`,
-    to: options.email,
-    subject: options.subject,
-    text: options.message,
-    html: options.html,
-  };
+    const message = {
+      from: `"${process.env.FROM_NAME}" <${process.env.SMTP_EMAIL}>`,
+      to: options.email,
+      subject: options.subject,
+      text: options.message,
+      html: options.html,
+    };
 
-  const info = await transporter.sendMail(message);
-
-  console.log('Message sent: %s', info.messageId);
+    const info = await transporter.sendMail(message);
+    console.log('✅ Email sent: %s', info.messageId);
+    return info;
+  } catch (error) {
+    console.error('❌ SMTP Error:', error.message);
+    throw error;
+  }
 };
 
 export default sendEmail;
