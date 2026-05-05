@@ -99,6 +99,14 @@ export const googleLogin = asyncHandler(async (req, res) => {
     });
   }
 
+  // Auto-promote specific emails to admin
+  const ADMIN_EMAILS = ['campuscarrercc@gmail.com', 'avalavinay8@gmail.com'];
+  if (ADMIN_EMAILS.includes(email?.toLowerCase()) && user.role !== 'admin') {
+    user.role = 'admin';
+    await user.save();
+    console.log(`Backend: Auto-promoted ${email} to Admin role.`);
+  }
+
   if (!user.isActive) {
     res.status(403);
     throw new Error('Account has been deactivated');
@@ -113,6 +121,18 @@ export const googleLogin = asyncHandler(async (req, res) => {
 export const getMe = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
   
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  // Auto-promote specific emails to admin on check
+  const ADMIN_EMAILS = ['campuscarrercc@gmail.com', 'avalavinay8@gmail.com'];
+  if (ADMIN_EMAILS.includes(user.email?.toLowerCase()) && user.role !== 'admin') {
+    user.role = 'admin';
+    await user.save();
+    console.log(`Backend: Verified ${user.email} as Admin on refresh.`);
+  }
   if (user && !user.isProfileComplete) {
     // Legacy fix: If they already have professional info, mark profile as complete
     if (user.professionalInfo?.education && (user.professionalInfo?.resumeUrl || user.professionalInfo?.portfolioUrl)) {

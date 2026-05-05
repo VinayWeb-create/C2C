@@ -9,7 +9,7 @@ const createAdmin = async () => {
     try {
         await connectDB();
         
-        const email = 'avalavinay8@gmail.com';
+        const email = 'campuscarrercc@gmail.com';
         const password = 'Vinay..rok@1432';
 
         // Find if user already exists

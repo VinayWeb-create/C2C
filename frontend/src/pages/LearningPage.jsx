@@ -1144,13 +1144,13 @@ const DOMAIN_DATA = {
                         "Define success metrics"
                   ]
             },
-            {
+{
                   "step": 2,
                   "title": "Execution",
                   "desc": "Build the project",
                   "tasks": [
                         "Draft version 1",
-                        "Refine and polish"
+                        "Final review"
                   ]
             },
             {
@@ -1172,51 +1172,110 @@ const DOMAIN_DATA = {
             "Portfolio Link",
             "Project Documentation Link"
       ]
-},
-    testTopics: ["Core Concepts","Industry Best Practices","Tool Mastery","Problem Solving"]
-  },
+    },
+    testTopics: ["Core Concepts", "Industry Best Practices", "Tool Mastery", "Problem Solving"]
+  }
 };
 
 // Generate 80 questions for a domain
 const generateQuestions = (domain) => {
   const domainData = DOMAIN_DATA[domain];
   const topics = domainData?.testTopics || ['Topic 1', 'Topic 2'];
-  const baseQuestions = [
-    { q: `What is the primary purpose of ${topics[0]}?`, opts: [`Core functionality of ${topics[0]}`, 'Storage of data', 'Network routing', 'UI rendering'], ans: 0 },
-    { q: `Which tool is most commonly used for ${topics[1]}?`, opts: ['Visual Studio Code', 'Microsoft Word', 'Excel', 'PowerPoint'], ans: 0 },
-    { q: `In ${domain}, what does API stand for?`, opts: ['Application Programming Interface', 'Automated Processing Integration', 'Advanced Protocol Interaction', 'Application Protocol Input'], ans: 0 },
-    { q: `What is the best practice for ${topics[2] || 'performance'} optimization?`, opts: ['Minimize and cache resources', 'Add more servers', 'Ignore browser warnings', 'Use inline styles'], ans: 0 },
-    { q: `Which concept is fundamental to ${topics[3] || 'modern development'}?`, opts: ['Component-based architecture', 'Monolithic design', 'File-based routing only', 'No version control'], ans: 0 },
+  
+  const questionTemplates = [
+    { 
+      type: 'conceptual',
+      q: "Which of the following best describes the core principle of {topic}?", 
+      opts: [
+        "A foundational framework for implementing {topic} efficiently.", 
+        "A legacy method that is no longer used in modern industry.", 
+        "A decorative element with no functional impact.", 
+        "A secondary tool used only for documentation."
+      ], 
+      ans: 0 
+    },
+    { 
+      type: 'tooling',
+      q: "In a professional environment, which tool would you primarily use for {topic}?", 
+      opts: [
+        "Industry-standard software specifically designed for {topic}.", 
+        "A basic text editor without any specialized features.", 
+        "General-purpose spreadsheet software.", 
+        "Manual record-keeping without digital tools."
+      ], 
+      ans: 0 
+    },
+    { 
+      type: 'best-practice',
+      q: "What is considered a critical 'Best Practice' when working with {topic}?", 
+      opts: [
+        "Ensuring scalability, readability, and consistent performance.", 
+        "Prioritizing speed over quality and long-term maintenance.", 
+        "Avoiding any form of documentation or version control.", 
+        "Using as many different tools as possible simultaneously."
+      ], 
+      ans: 0 
+    },
+    { 
+      type: 'troubleshooting',
+      q: "If an issue arises in the {topic} layer, what is the first recommended step?", 
+      opts: [
+        "Identify the root cause using specialized debugging/audit tools.", 
+        "Restart the entire system without checking logs.", 
+        "Delete all progress and start from scratch.", 
+        "Ignore the issue unless it causes a total system failure."
+      ], 
+      ans: 0 
+    },
+    { 
+      type: 'industry',
+      q: "How does {topic} contribute to the overall success of a {domain} project?", 
+      opts: [
+        "By providing the necessary structure and quality assurance.", 
+        "It is merely a formality and does not contribute to success.", 
+        "It complicates the workflow without adding any value.", 
+        "It is only relevant for theoretical research, not real projects."
+      ], 
+      ans: 0 
+    },
   ];
 
   const questions = [];
   let qNum = 1;
-  const topicGroups = [
-    ...topics.map((t, i) => ({ topic: t, count: Math.floor(80 / topics.length) + (i < 80 % topics.length ? 1 : 0) }))
-  ];
+  const topicGroups = topics.map((t, i) => ({ 
+    topic: t, 
+    count: Math.floor(80 / topics.length) + (i < 80 % topics.length ? 1 : 0) 
+  }));
 
   topicGroups.forEach(({ topic, count }) => {
     for (let i = 0; i < count && questions.length < 80; i++) {
-      const base = baseQuestions[i % baseQuestions.length];
+      const template = questionTemplates[i % questionTemplates.length];
       questions.push({
         id: qNum++,
         topic,
-        question: `[${topic}] Q${i + 1}: ${base.q.replace(topics[0], topic)}`,
-        options: base.opts.map((o, oi) => `${topic} — ${o}`),
-        answer: base.opts[base.ans],
-        explanation: `This tests your understanding of ${topic} in the context of ${domain}.`,
+        type: template.type,
+        question: template.q.replace(/{topic}/g, topic).replace(/{domain}/g, domain),
+        options: template.opts.map(o => o.replace(/{topic}/g, topic).replace(/{domain}/g, domain)),
+        answer: template.opts[template.ans].replace(/{topic}/g, topic).replace(/{domain}/g, domain),
+        explanation: 'This question evaluates your understanding of ' + topic + ', a critical pillar of ' + domain + '.',
       });
     }
   });
-  return questions.slice(0, 80);
+
+  return questions.slice(0, 80).map(q => {
+    const shuffled = [...q.options].sort(() => Math.random() - 0.5);
+    return { ...q, options: shuffled };
+  });
 };
+
+
 
 // ─────────────────────────────────────────────
 // 3D ROADMAP TIMELINE COMPONENT
 // ─────────────────────────────────────────────
 const RoadmapTimeline = ({ roadmap, domainColor }) => {
   const containerRef = useRef(null);
-  const [activePhase, setActivePhase] = useState(null);
+const [activePhase, setActivePhase] = useState(null);
 
   return (
     <div className="relative py-8" ref={containerRef}>
@@ -1518,8 +1577,37 @@ Major SaaS companies (like HubSpot or Mailchimp) build multi-million dollar empi
   }
 ,
   'Video & Photo Editing': {
-    'Video Formats': `## Video Formats\n\n### 📖 Definition\nVideo Formats is an essential concept in Video & Photo Editing that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of Video Formats as the foundation of your work. Just like a builder needs a blueprint, a professional needs Video Formats to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, Video Formats is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
-    'Color Grading Basics': `## Color Grading Basics\n\n### 📖 Definition\nColor Grading Basics is an essential concept in Video & Photo Editing that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of Color Grading Basics as the foundation of your work. Just like a builder needs a blueprint, a professional needs Color Grading Basics to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, Color Grading Basics is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
+    'Video Formats': `## Video Formats
+
+### 📖 Definition
+Video formats (containers) and codecs are the standards used to encode and store digital video data. Common formats include MP4, MOV, and AVI, while codecs include H.264, HEVC (H.265), and ProRes.
+
+### 💡 Meaning (In Simple Terms)
+Think of the format as a box (the container) and the codec as the way the video is packed inside that box (compression). Some boxes are small and easy to share (MP4), while others are large but keep every single detail perfect for editing (ProRes).
+
+### 📝 Examples
+- **H.264 (MP4)**: The most compatible format, perfect for YouTube, Instagram, and web sharing.
+- **Apple ProRes**: A high-quality "intermediate" codec used by professionals during the editing process to prevent quality loss.
+- **HEVC (H.265)**: A modern codec that provides the same quality as H.264 but at half the file size—ideal for 4K and 8K video.
+
+### ⚙️ Real Workings (Industry Application)
+At a professional production house, editors never edit using raw MP4 files from a camera if they can avoid it. They first "transcode" the footage into a format like ProRes or DNxHR. This makes the editing software run much smoother and allows for much better color grading without the image "breaking" or becoming pixelated.`,
+
+    'Color Grading Basics': `## Color Grading Basics
+
+### 📖 Definition
+Color grading is the process of altering and enhancing the color of a motion picture, video image, or still image electronically, photo-chemically, or digitally. It includes both color correction (fixing issues) and color grading (creative look).
+
+### 💡 Meaning (In Simple Terms)
+Color correction is like cleaning a house—you fix the white balance, exposure, and contrast so everything looks "normal." Color grading is like decorating the house—you add a "mood" like the warm, golden look of a sunset or the cold, blue look of a thriller movie.
+
+### 📝 Examples
+- **LUTS (Look Up Tables)**: Preset color profiles that can instantly give your video a specific cinematic look.
+- **Scopes (Vectorscope/Waveform)**: Scientific graphs that tell you exactly how bright or colorful your image is, so you don't have to trust your eyes alone.
+- **Primary vs. Secondary Wheels**: Primaries affect the whole image, while Secondaries let you change ONLY the color of the sky or a person's shirt.
+
+### ⚙️ Real Workings (Industry Application)
+In Hollywood films, color grading is used to guide the audience's emotions. In 'The Matrix', scenes inside the matrix have a green tint to feel "sickly" and artificial, while scenes in the real world are blue and cold. Professional colorists use DaVinci Resolve and specialized control panels to ensure every shot in a movie has a consistent, intentional look.`,
     'Timeline Management': `## Timeline Management\n\n### 📖 Definition\nTimeline Management is an essential concept in Video & Photo Editing that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of Timeline Management as the foundation of your work. Just like a builder needs a blueprint, a professional needs Timeline Management to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, Timeline Management is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
     'Audio Mixing': `## Audio Mixing\n\n### 📖 Definition\nAudio Mixing is an essential concept in Video & Photo Editing that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of Audio Mixing as the foundation of your work. Just like a builder needs a blueprint, a professional needs Audio Mixing to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, Audio Mixing is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
   },
@@ -1536,41 +1624,114 @@ Major SaaS companies (like HubSpot or Mailchimp) build multi-million dollar empi
     'Content Structure': `## Content Structure\n\n### 📖 Definition\nContent Structure is an essential concept in Content Writing that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of Content Structure as the foundation of your work. Just like a builder needs a blueprint, a professional needs Content Structure to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, Content Structure is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
   },
   'UI/UX Design': {
-    'UX Heuristics': `## UX Heuristics\n\n### 📖 Definition\nUX Heuristics is an essential concept in UI/UX Design that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of UX Heuristics as the foundation of your work. Just like a builder needs a blueprint, a professional needs UX Heuristics to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, UX Heuristics is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
-    'Color & Typography in UI': `## Color & Typography in UI\n\n### 📖 Definition\nColor & Typography in UI is an essential concept in UI/UX Design that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of Color & Typography in UI as the foundation of your work. Just like a builder needs a blueprint, a professional needs Color & Typography in UI to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, Color & Typography in UI is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
-    'Figma Basics': `## Figma Basics\n\n### 📖 Definition\nFigma Basics is an essential concept in UI/UX Design that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of Figma Basics as the foundation of your work. Just like a builder needs a blueprint, a professional needs Figma Basics to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, Figma Basics is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
-    'Accessibility': `## Accessibility\n\n### 📖 Definition\nAccessibility is an essential concept in UI/UX Design that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of Accessibility as the foundation of your work. Just like a builder needs a blueprint, a professional needs Accessibility to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, Accessibility is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
+    'UX Heuristics': `## UX Heuristics
+
+### 📖 Definition
+UX Heuristics are a set of 10 general principles for user interface design, developed by Jakob Nielsen. They are called "heuristics" because they are broad rules of thumb and not specific usability guidelines.
+
+### 💡 Meaning (In Simple Terms)
+Think of these as the "Ten Commandments" of app design. They ensure that an app is easy to use, prevents errors, and doesn't make the user feel stupid. For example, "Visibility of System Status" means the app should always tell the user what's happening (like a loading bar).
+
+### 📝 Examples
+- **Match between system and the real world**: Using a "trash can" icon for deleting files instead of a weird technical symbol.
+- **User control and freedom**: Having an "Undo" button so users can fix mistakes easily.
+- **Consistency and standards**: Ensuring all buttons that "Submit" are the same color and in the same place across the whole app.
+
+### ⚙️ Real Workings (Industry Application)
+UX Researchers conduct "Heuristic Evaluations" on new products before they launch. They walk through the app and grade it against all 10 principles. If an app violates "Error Prevention" by not asking "Are you sure you want to delete this?", it is flagged as a major usability bug. This process saves companies millions by fixing problems before they reach frustrated customers.`,
+
+    'Figma Basics': `## Figma Basics
+
+### 📖 Definition
+Figma is a collaborative web-based design tool used for vector graphics and interface prototyping. It is currently the industry standard for UI/UX design, allowing multiple designers to work on the same file in real-time.
+
+### 💡 Meaning (In Simple Terms)
+It's like Google Docs, but for designers. Instead of typing text, you draw boxes, buttons, and icons. You can then link those boxes together to create a "fake" app that actually works when you click it, allowing you to test your ideas before a developer writes any code.
+
+### 📝 Examples
+- **Auto Layout**: A magical feature that automatically resizes buttons and lists as you type text inside them—no more manual resizing!
+- **Components**: Creating one "Master Button" and using it 100 times. If you change the color of the Master, all 100 copies change instantly.
+- **Prototyping**: Connecting a "Login" button to a "Dashboard" screen with a smooth sliding animation.
+
+### ⚙️ Real Workings (Industry Application)
+In modern tech companies (like Airbnb or Shopify), the entire product development starts in Figma. Designers build high-fidelity mockups, developers use "Dev Mode" to inspect CSS properties like padding and colors, and stakeholders leave comments directly on the designs. Figma isn't just a drawing tool; it's the communication hub for the entire product team.`,
   },
-  'Data Science': {
-    'Python Data Structures': `## Python Data Structures\n\n### 📖 Definition\nPython Data Structures is an essential concept in Data Science that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of Python Data Structures as the foundation of your work. Just like a builder needs a blueprint, a professional needs Python Data Structures to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, Python Data Structures is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
-    'Statistics Basics': `## Statistics Basics\n\n### 📖 Definition\nStatistics Basics is an essential concept in Data Science that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of Statistics Basics as the foundation of your work. Just like a builder needs a blueprint, a professional needs Statistics Basics to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, Statistics Basics is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
-    'Data Cleaning': `## Data Cleaning\n\n### 📖 Definition\nData Cleaning is an essential concept in Data Science that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of Data Cleaning as the foundation of your work. Just like a builder needs a blueprint, a professional needs Data Cleaning to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, Data Cleaning is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
-    'ML Evaluation Metrics': `## ML Evaluation Metrics\n\n### 📖 Definition\nML Evaluation Metrics is an essential concept in Data Science that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of ML Evaluation Metrics as the foundation of your work. Just like a builder needs a blueprint, a professional needs ML Evaluation Metrics to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, ML Evaluation Metrics is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
-  },
-  'IT Support': {
-    'Networking OSI Model': `## Networking OSI Model\n\n### 📖 Definition\nNetworking OSI Model is an essential concept in IT Support that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of Networking OSI Model as the foundation of your work. Just like a builder needs a blueprint, a professional needs Networking OSI Model to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, Networking OSI Model is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
-    'Hardware Troubleshooting': `## Hardware Troubleshooting\n\n### 📖 Definition\nHardware Troubleshooting is an essential concept in IT Support that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of Hardware Troubleshooting as the foundation of your work. Just like a builder needs a blueprint, a professional needs Hardware Troubleshooting to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, Hardware Troubleshooting is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
-    'Windows Admin': `## Windows Admin\n\n### 📖 Definition\nWindows Admin is an essential concept in IT Support that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of Windows Admin as the foundation of your work. Just like a builder needs a blueprint, a professional needs Windows Admin to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, Windows Admin is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
-    'Security Basics': `## Security Basics\n\n### 📖 Definition\nSecurity Basics is an essential concept in IT Support that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of Security Basics as the foundation of your work. Just like a builder needs a blueprint, a professional needs Security Basics to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, Security Basics is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
-  },
-  'Business Consulting': {
-    'Financial Statements': `## Financial Statements\n\n### 📖 Definition\nFinancial Statements is an essential concept in Business Consulting that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of Financial Statements as the foundation of your work. Just like a builder needs a blueprint, a professional needs Financial Statements to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, Financial Statements is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
-    'SWOT Analysis': `## SWOT Analysis\n\n### 📖 Definition\nSWOT Analysis is an essential concept in Business Consulting that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of SWOT Analysis as the foundation of your work. Just like a builder needs a blueprint, a professional needs SWOT Analysis to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, SWOT Analysis is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
-    'Pricing Strategies': `## Pricing Strategies\n\n### 📖 Definition\nPricing Strategies is an essential concept in Business Consulting that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of Pricing Strategies as the foundation of your work. Just like a builder needs a blueprint, a professional needs Pricing Strategies to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, Pricing Strategies is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
-    'KPI Tracking': `## KPI Tracking\n\n### 📖 Definition\nKPI Tracking is an essential concept in Business Consulting that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of KPI Tracking as the foundation of your work. Just like a builder needs a blueprint, a professional needs KPI Tracking to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, KPI Tracking is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
-  },
-  'Translation': {
-    'Translation Memory': `## Translation Memory\n\n### 📖 Definition\nTranslation Memory is an essential concept in Translation that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of Translation Memory as the foundation of your work. Just like a builder needs a blueprint, a professional needs Translation Memory to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, Translation Memory is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
-    'Cultural Localization': `## Cultural Localization\n\n### 📖 Definition\nCultural Localization is an essential concept in Translation that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of Cultural Localization as the foundation of your work. Just like a builder needs a blueprint, a professional needs Cultural Localization to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, Cultural Localization is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
-    'Grammar Precision': `## Grammar Precision\n\n### 📖 Definition\nGrammar Precision is an essential concept in Translation that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of Grammar Precision as the foundation of your work. Just like a builder needs a blueprint, a professional needs Grammar Precision to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, Grammar Precision is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
-    'CAT Tool Features': `## CAT Tool Features\n\n### 📖 Definition\nCAT Tool Features is an essential concept in Translation that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of CAT Tool Features as the foundation of your work. Just like a builder needs a blueprint, a professional needs CAT Tool Features to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, CAT Tool Features is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
-  },
-  'Voice Over': {
-    'Microphone Types': `## Microphone Types\n\n### 📖 Definition\nMicrophone Types is an essential concept in Voice Over that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of Microphone Types as the foundation of your work. Just like a builder needs a blueprint, a professional needs Microphone Types to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, Microphone Types is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
-    'Acoustic Treatment': `## Acoustic Treatment\n\n### 📖 Definition\nAcoustic Treatment is an essential concept in Voice Over that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of Acoustic Treatment as the foundation of your work. Just like a builder needs a blueprint, a professional needs Acoustic Treatment to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, Acoustic Treatment is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
-    'Editing Software': `## Editing Software\n\n### 📖 Definition\nEditing Software is an essential concept in Voice Over that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of Editing Software as the foundation of your work. Just like a builder needs a blueprint, a professional needs Editing Software to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, Editing Software is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
-    'Vocal Health': `## Vocal Health\n\n### 📖 Definition\nVocal Health is an essential concept in Voice Over that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of Vocal Health as the foundation of your work. Just like a builder needs a blueprint, a professional needs Vocal Health to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, Vocal Health is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
-  },
+    'Data Cleaning': `## Data Cleaning
+
+### 📖 Definition
+Data cleaning (or data scrubbing) is the process of detecting and correcting (or removing) corrupt or inaccurate records from a record set, table, or database and refers to identifying incomplete, incorrect, inaccurate, or irrelevant parts of the data.
+
+### 💡 Meaning (In Simple Terms)
+It's like washing vegetables before cooking. Raw data is usually "dirty"—it has missing values, duplicate entries, or weird formatting. Data cleaning is the boring but essential work of making sure your data is clean and organized before you start analyzing it or building AI models.
+
+### 📝 Examples
+- **Handling Missing Values**: Deciding whether to delete a row with missing data or fill it in with the average (Mean Imputation).
+- **Removing Outliers**: Getting rid of data points that are obviously wrong (like a person's age being 250 years).
+- **Standardizing Formats**: Ensuring all dates are written as YYYY-MM-DD instead of having 5 different formats.
+
+### ⚙️ Real Workings (Industry Application)
+Data Scientists spend 80% of their time cleaning data and only 20% building models. In a real project at a company like Amazon, customer addresses might come in thousands of different formats. Before a machine learning model can predict delivery times, a "Data Pipeline" must be built to clean and standardize those addresses automatically using tools like Python Pandas or SQL.`,
+    'Networking OSI Model': `## Networking OSI Model
+
+### 📖 Definition
+The Open Systems Interconnection (OSI) model is a conceptual framework used to describe the functions of a networking system. It characterizes computing functions into a universal set of rules and requirements in order to support interoperability between different products and software.
+
+### 💡 Meaning (In Simple Terms)
+Think of the OSI model as the "Life Cycle of a Message." When you send a WhatsApp message, it travels through 7 different layers—from the screen you touch (Application Layer) down to the actual electricity or light signals in the wire (Physical Layer). Each layer has a specific job to do to make sure your message reaches the right person.
+
+### 📝 Examples
+- **Layer 7 (Application)**: HTTP, FTP, and SMTP—the protocols your browser uses to show you websites.
+- **Layer 3 (Network)**: The IP Address layer—where routers decide which path your data should take across the internet.
+- **Layer 1 (Physical)**: The actual Ethernet cables, WiFi radio waves, or Fiber Optic light pulses.
+
+### ⚙️ Real Workings (Industry Application)
+IT Support specialists use the OSI model to "Troubleshoot from the Bottom Up." If a user can't access a website, the specialist first checks Layer 1 (Is the cable plugged in?), then Layer 3 (Does the computer have an IP address?), and finally Layer 7 (Is the browser working?). This structured approach is the gold standard for fixing network issues in large corporate environments.`,
+    'SWOT Analysis': `## SWOT Analysis
+
+### 📖 Definition
+SWOT analysis (or SWOT matrix) is a strategic planning technique used to help a person or organization identify strengths, weaknesses, opportunities, and threats related to business competition or project planning.
+
+### 💡 Meaning (In Simple Terms)
+It's like a "Reality Check" for a business idea. You look at what you're good at (Strengths), where you're struggling (Weaknesses), how you can grow (Opportunities), and what might kill your business (Threats). It helps you make decisions based on facts rather than just feelings.
+
+### 📝 Examples
+- **Strengths**: A restaurant has a world-famous chef and a prime location.
+- **Weaknesses**: The same restaurant has very high rent and slow service.
+- **Opportunities**: Opening a delivery-only kitchen to reach more customers.
+- **Threats**: A new, cheaper restaurant opening next door or a sudden increase in food costs.
+
+### ⚙️ Real Workings (Industry Application)
+Management consultants (like at McKinsey or BCG) use SWOT analysis during the "Discovery Phase" of a project. They interview employees and analyze market data to build a matrix. This matrix then dictates the entire strategy—for example, if a "Threat" is a changing technology, the strategy will focus heavily on R&D and digital transformation to neutralize that threat.`,
+    'Cultural Localization': `## Cultural Localization
+
+### 📖 Definition
+Localization (also referred to as "l10n") is the process of adapting a product or content to a specific locale or market. Translation is only one part of localization.
+
+### 💡 Meaning (In Simple Terms)
+Translation is changing the words from one language to another. Localization is changing the *feel* of the content so it doesn't offend or confuse people in a different country. For example, in the US, "Yellow" means happiness, but in some cultures, it's the color of mourning. Localization fixes these cultural "glitches."
+
+### 📝 Examples
+- **Date/Time Formats**: Changing MM/DD/YYYY (USA) to DD/MM/YYYY (India/UK).
+- **Currencies**: Automatically converting $9.99 to ₹830.
+- **Cultural Nuance**: Changing an image of a person eating with their left hand in a Middle Eastern version of an app, as it's culturally taboo.
+
+### ⚙️ Real Workings (Industry Application)
+Global companies like Netflix or Disney spend millions on localization. When 'Inside Out' was released, a scene showed a child refusing to eat broccoli. In the Japanese version, they changed the broccoli to green peppers because Japanese children generally like broccoli but hate green peppers. This level of localization ensures the story resonates perfectly with the local audience.`,
+    'Microphone Types': `## Microphone Types
+
+### 📖 Definition
+In voice over, the microphone is the most critical piece of hardware. The two main types used are Dynamic Microphones and Condenser Microphones, each with different polar patterns (like Cardioid).
+
+### 💡 Meaning (In Simple Terms)
+Dynamic mics are like "Sturdy Workers"—they are great at ignoring background noise and can handle loud voices, but they miss some tiny details. Condenser mics are like "Sensitive Artists"—they capture every tiny whisper and breath, but they also pick up the sound of a fan or a car outside.
+
+### 📝 Examples
+- **Large Diaphragm Condenser**: The standard for professional voice overs (e.g., Rode NT1, Neumann U87).
+- **Dynamic Podcast Mic**: Great for home studios with less soundproofing (e.g., Shure SM7B).
+- **Cardioid Pattern**: A setting that only picks up sound from the front of the mic, ignoring the back.
+
+### ⚙️ Real Workings (Industry Application)
+Professional voice actors select their mic based on the "Job Character." For a high-energy movie trailer, a dynamic mic might be used to handle the volume. For a soft, emotional audiobook, a condenser mic is essential to capture the intimacy and nuances of the performance. Understanding which mic to use is the difference between a "home recording" and a "studio masterpiece."`,
   'Other': {
     'Core Concepts': `## Core Concepts\n\n### 📖 Definition\nCore Concepts is an essential concept in Other that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of Core Concepts as the foundation of your work. Just like a builder needs a blueprint, a professional needs Core Concepts to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, Core Concepts is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
     'Industry Best Practices': `## Industry Best Practices\n\n### 📖 Definition\nIndustry Best Practices is an essential concept in Other that involves understanding the core principles and industry standards.\n\n### 💡 Meaning (In Simple Terms)\nThink of Industry Best Practices as the foundation of your work. Just like a builder needs a blueprint, a professional needs Industry Best Practices to ensure their work is robust, scalable, and effective.\n\n### 📝 Examples\n- **Example 1**: Implementing standard practices.\n- **Example 2**: Optimizing workflows for better efficiency.\n- **Example 3**: Leveraging modern tools to achieve results.\n\n### ⚙️ Real Workings (Industry Application)\nIn real-world enterprise environments at major agencies, Industry Best Practices is used daily to streamline operations, enhance user experiences, and drive measurable ROI. Professionals rely on these exact techniques to deliver high-quality, production-ready assets.`,
@@ -2225,6 +2386,99 @@ const SkillTestSection = ({ domain, domainColor, user, updateUser }) => {
 };
 
 // ─────────────────────────────────────────────
+// PROFESSIONAL CERTIFICATION COMPONENT
+// ─────────────────────────────────────────────
+const CertificateSection = ({ domain, domainColor, user }) => {
+  const badge = user?.badges?.find((b) => b.role === domain);
+
+  if (!badge) return (
+    <div className="text-center py-20 border-2 border-dashed border-white/10 rounded-[2.5rem]">
+      <LockClosedIcon className="w-16 h-16 mx-auto mb-4 text-gray-700" />
+      <h3 className="text-xl font-black text-gray-500">Certification Locked</h3>
+      <p className="text-gray-600 text-sm max-w-xs mx-auto mt-2">Complete the project and pass the skill test with 75% or higher to unlock your professional certificate.</p>
+    </div>
+  );
+
+  return (
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-2xl font-black text-white">Your Certification</h3>
+          <p className="text-gray-400 text-sm">Issued by C2C Academy • Professional Merit System</p>
+        </div>
+        <button 
+          onClick={() => window.print()}
+          className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-white text-black font-black text-sm hover:bg-gray-200 transition-all"
+        >
+          <ArrowDownTrayIcon className="w-4 h-4" /> Download PDF
+        </button>
+      </div>
+
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="relative aspect-[1.414/1] w-full max-w-4xl mx-auto bg-white p-1 shadow-2xl rounded-sm overflow-hidden text-slate-900 certificate-print"
+      >
+        <div className="absolute inset-0 border-[16px] border-double border-slate-200 m-4 pointer-events-none" />
+        <div className="h-full w-full border border-slate-100 flex flex-col items-center justify-center p-12 text-center relative">
+          <div className="absolute top-8 left-8 w-12 h-12 border-t-4 border-l-4 border-slate-300" />
+          <div className="absolute top-8 right-8 w-12 h-12 border-t-4 border-r-4 border-slate-300" />
+          <div className="absolute bottom-8 left-8 w-12 h-12 border-b-4 border-l-4 border-slate-300" />
+          <div className="absolute bottom-8 right-8 w-12 h-12 border-b-4 border-r-4 border-slate-300" />
+
+          <div className="mb-6">
+            <div className="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center border-2 border-slate-200 relative">
+              <AcademicCapIcon className="w-10 h-10 text-slate-800" />
+              <div className="absolute -bottom-2 bg-slate-800 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter">Verified</div>
+            </div>
+          </div>
+
+          <h1 className="font-serif text-3xl uppercase tracking-[0.2em] text-slate-500 mb-2">Certificate of Achievement</h1>
+          <p className="text-slate-400 font-medium italic text-sm mb-8">This professional merit credential is awarded to</p>
+          <h2 className="text-5xl font-serif font-black text-slate-900 mb-8 tracking-tight">{user?.name || 'Academic Scholar'}</h2>
+          <div className="w-32 h-0.5 bg-slate-200 mb-8" />
+          <p className="max-w-xl text-slate-600 leading-relaxed text-sm mb-12">
+            For successfully completing the comprehensive professional development path in 
+            <strong className="text-slate-900"> {domain} </strong> 
+            including rigorous project assessment and proctored examination, demonstrating industry-grade proficiency.
+          </p>
+
+          <div className="grid grid-cols-3 gap-12 w-full mt-auto">
+            <div className="text-center">
+              <div className="font-serif text-slate-900 font-bold mb-1">{new Date(badge.issuedAt).toLocaleDateString()}</div>
+              <div className="h-px bg-slate-300 w-full mb-1" />
+              <div className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Date of Issue</div>
+            </div>
+            <div className="flex flex-col items-center justify-center">
+               <TrophyIcon className="w-12 h-12 text-slate-200 opacity-50" />
+               <div className="text-[8px] uppercase font-bold text-slate-300 tracking-tighter mt-1">ID: {user?._id?.slice(-8).toUpperCase()}-{domain.slice(0,2).toUpperCase()}</div>
+            </div>
+            <div className="text-center">
+              <div className="font-serif text-slate-900 font-bold mb-1 italic">C2C Academy Board</div>
+              <div className="h-px bg-slate-300 w-full mb-1" />
+              <div className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Authorized Signature</div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+      
+      <div className="flex flex-col items-center gap-4">
+        <p className="text-gray-400 font-bold text-sm">🎉 Share your achievement with your professional network!</p>
+        <div className="flex gap-4">
+          <button className="flex items-center gap-2 px-6 py-2 rounded-xl bg-[#0077b5] text-white font-bold text-sm hover:brightness-110 transition-all">
+             Share to LinkedIn
+          </button>
+          <button className="flex items-center gap-2 px-6 py-2 rounded-xl bg-gray-800 text-white font-bold text-sm hover:bg-gray-700 transition-all">
+             Copy Verification URL
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+// ─────────────────────────────────────────────
 // MAIN LEARNING PAGE
 // ─────────────────────────────────────────────
 const LearningPage = () => {
@@ -2260,6 +2514,7 @@ const LearningPage = () => {
     { id: 'notes', label: 'Custom Notes', icon: OutlineDocumentTextIcon },
     { id: 'project', label: 'Project', icon: CodeBracketIcon },
     { id: 'test', label: 'Skill Test', icon: ShieldCheckIcon },
+    { id: 'certification', label: 'Certification', icon: AcademicCapIcon },
   ];
 
   // ── DOMAIN SELECTION SCREEN ──
@@ -2306,7 +2561,7 @@ const LearningPage = () => {
                     <>
                       <p className="text-gray-500 text-sm mb-5 italic">{data.tagline}</p>
                       <div className="flex flex-wrap gap-1.5">
-                        {['Roadmap', 'Videos', 'Custom Notes', 'Project', 'Test'].map((f) => (
+                        {['Roadmap', 'Videos', 'Custom Notes', 'Project', 'Test', 'Certificate'].map((f) => (
                           <span key={f} className="text-[9px] font-black uppercase px-2 py-0.5 rounded-lg"
                             style={{ background: data.color + '18', color: data.color }}>
                             {f}
@@ -2556,6 +2811,12 @@ const LearningPage = () => {
                   updateUser={updateUser}
                 />
               )}
+
+              {/* ── CERTIFICATION ── */}
+              {activeTab === 'certification' && (
+                <CertificateSection domain={selectedDomain} domainColor={domainColor} user={user} />
+              )}
+
 
               {/* Fallback for domains without data */}
               {!domainData && ['roadmap', 'videos', 'notes', 'project'].includes(activeTab) && (
